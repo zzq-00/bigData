@@ -1,0 +1,494 @@
+<template>
+  <div>
+    <!-- 项目基本信息 -->
+    <el-form class="form-content" :model="baseFormData" :rules="baseFormRules" ref="baseForm" label-width="180px">
+      <h4 class="create-info-title">1 项目基本信息</h4>
+      <el-form-item label="项目行业：" prop="industryBelong" required>
+        <el-radio-group v-model="baseFormData.industryBelong" @change="belongChange">
+          <el-radio v-for="(item, index) in IndustryBelongFirst" :key="index" :label="item.name">
+            {{item.name}}
+            <input class="other-input" type="text" v-if="item.name === '其他行业'" v-model="baseFormData.industryBelongOther">
+          </el-radio>
+        </el-radio-group>
+        <el-form-item prop="subIndustryBelong">
+          <div class="child-radio" v-if="IndustrySecond.length">
+            <el-radio-group v-model="baseFormData.subIndustryBelong" @change="subBelongChange">
+              <el-radio v-for="(item, index) in IndustrySecond" :key="index" :label="item.name">
+                {{item.name}}
+                <input class="other-input" type="text" v-if="item.name === '其他'" v-model="baseFormData.subIndustryBelongOther">
+              </el-radio>
+            </el-radio-group>
+          </div>
+        </el-form-item>
+      </el-form-item>
+      <el-form-item label="项目名称：" prop="projectName">
+        <el-input style="width: 520px;" v-model="baseFormData.projectName" @blur="duplicateNames"></el-input>
+        <p v-show="isDuplicateName" style="position: absolute;line-height: 1;margin-top: 4px;font-size: 12px;color: #aaa;">* {{isDuplicateName}}</p>
+      </el-form-item>
+      <el-form-item label="建设单位：" prop="doSide">
+        <el-input style="width: 520px;" v-model="baseFormData.doSide"></el-input>
+      </el-form-item>
+      <el-form-item label="开工日期：">
+        <el-col style="width: 200px;">
+          <el-form-item>
+            <el-date-picker v-model="baseFormData.projectStart" style="width: 200px;" type="date" value-format="yyyy-MM-dd" :picker-options="pickerOptionsStart"></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col style="width: 320px;">
+          <el-form-item label="竣工日期：" label-width="120px">
+            <el-date-picker v-model="baseFormData.projectEnd" style="width: 200px;" type="date" value-format="yyyy-MM-dd" :picker-options="pickerOptionsEnd"></el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="建设性质：" prop="nature">
+        <el-radio-group v-model="baseFormData.nature">
+          <el-radio v-for="(item, index) in ProjectNature" :key="index" :label="item.name"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="项目成员：">
+        <el-input class="member-input" :value="memberFromStore" disabled placeholder="点击右侧加号添加"></el-input>
+        <span class="btn-member" @click="$store.commit('SHOWDIALOG')">+</span>
+      </el-form-item>
+    </el-form>
+    <!-- 扩展信息 -->
+    <el-form class="form-content" :model="expandFormData" :rules="expandFormRules" ref="expandForm" label-width="180px">
+      <h4 class="create-info-title" v-if="Object.keys(expandFormData).length">2 扩展信息</h4>
+      <el-form-item label="项目地点：" v-if="expandFormData.hasOwnProperty('provinceCode')" prop="provinceCode" ref="address">
+        <placeComponent @getValue="getPlace"></placeComponent>
+      </el-form-item>
+      <el-form-item label="地区类别：" v-if="expandFormData.hasOwnProperty('areaType')" prop="areaType">
+        <el-radio-group v-model="expandFormData.areaType">
+          <el-radio v-for="(item,index) in areaTypeList" :key="index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="容积率：" v-if="expandFormData.hasOwnProperty('volumeRate')" prop="volumeRate">
+        <el-input style="width: 520px;" type="number" v-model="expandFormData.volumeRate"></el-input>
+      </el-form-item>
+      <el-form-item label="绿化率：" v-if="expandFormData.hasOwnProperty('greeningRate')" prop="greeningRate">
+        <el-input style="width: 520px;" type="number" v-model="expandFormData.greeningRate"></el-input> %
+      </el-form-item>
+      <el-form-item label="占地面积：" v-if="expandFormData.hasOwnProperty('floorArea')" prop="floorArea" required>
+        <el-input style="width: 520px;" type="number" v-model="expandFormData.floorArea"></el-input> ㎡
+      </el-form-item>
+      <el-form-item label="规划建筑面积：" v-if="expandFormData.hasOwnProperty('buildingArea')" prop="buildingArea" required>
+        <el-input style="width: 520px;" type="number" v-model="expandFormData.buildingArea"></el-input> ㎡
+      </el-form-item>
+      <el-form-item label="医院规划等级：" v-if="expandFormData.hasOwnProperty('hospitalRank')" prop="hospitalRank">
+        <el-radio-group v-model="expandFormData.hospitalRank">
+          <el-radio v-for="(item,index) in hospitalRankList.slice(0,3)" :key="'0'+index" :label="item"></el-radio>
+          <br>
+          <el-radio v-for="(item,index) in hospitalRankList.slice(3,6)" :key="'1'+index" :label="item"></el-radio>
+          <br>
+          <el-radio v-for="(item,index) in hospitalRankList.slice(6,9)" :key="'2'+index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="学校类别：" v-if="expandFormData.hasOwnProperty('schoolType')" prop="schoolType">
+        <el-checkbox-group v-model="expandFormData.schoolType">
+          <el-checkbox v-for="(item,index) in schoolTypeList" :key="index" :label="item"></el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="建设规模：" v-if="expandFormData.hasOwnProperty('projectScale')" prop="projectScale" required>
+        <el-input style="width: 520px;" v-model.number="expandFormData.projectScale"></el-input> MW
+      </el-form-item>
+      <el-form-item label="日处理量：" v-if="expandFormData.hasOwnProperty('handleCapacity')" prop="handleCapacity" required>
+        <el-input style="width: 520px;" v-model.number="expandFormData.handleCapacity"></el-input> t
+      </el-form-item>
+      <el-form-item label="规划容量：" v-if="expandFormData.hasOwnProperty('planCapacity')" prop="planCapacity" required>
+        <el-input style="width: 520px;" v-model.number="expandFormData.planCapacity"></el-input> 万kVA
+      </el-form-item>
+      <el-form-item label="线路规划总里程长度：" v-if="expandFormData.hasOwnProperty('totalKm')" prop="totalKm" required>
+        <el-input style="width: 520px;" v-model="expandFormData.totalKm"></el-input> km
+      </el-form-item>
+      <el-form-item label="年客货运量：" v-if="expandFormData.hasOwnProperty('transportVolum')" prop="transportVolum" required>
+        <el-input style="width: 230px;" v-model="expandFormData.transportVolum"></el-input> 万吨
+        <el-input style="width: 230px;margin-left: 25px;" v-model="expandFormData.transportVolum2"></el-input> 万人
+      </el-form-item>
+      <el-form-item label="项目途经重要节点城市：" v-if="expandFormData.hasOwnProperty('importantCity')" prop="importantCity" ref="cities">
+        <placeComponent @getValue="getImportantCity" selType="twoLevel"></placeComponent>
+      </el-form-item>
+      <el-form-item label="铁路等级：" v-if="expandFormData.hasOwnProperty('railwayRank')" prop="railwayRank">
+        <el-radio-group v-model="expandFormData.railwayRank">
+          <el-radio v-for="(item,index) in railwayRankList" :key="index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="城市轨道交通类别：" v-if="expandFormData.hasOwnProperty('trafficType')" prop="trafficType">
+        <el-radio-group v-model="expandFormData.trafficType">
+          <el-radio v-for="(item,index) in trafficTypeList" :key="index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="公路等级：" v-if="expandFormData.hasOwnProperty('highwayRank')" prop="highwayRank">
+        <el-radio-group v-model="expandFormData.highwayRank">
+          <el-radio v-for="(item,index) in highwayRankList" :key="index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="酒店星级：" v-if="expandFormData.hasOwnProperty('starRank')" prop="starRank">
+        <el-radio-group v-model="expandFormData.starRank">
+          <el-radio v-for="(item,index) in starRankList" :key="index" :label="item"></el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
+    <div class="footer-btn">
+      <div class="cancel-btn" @click="fnClear">清空</div>
+      <div :class="['new-btn', {'wait': waitTime}]" @click="createProjectClick('baseForm')">创建项目</div>
+    </div>
+
+    <!-- 成员弹窗 -->
+    <el-dialog title="添加项目成员" :close-on-click-modal="false" :visible.sync="$store.state.memberList.dialogMemberVisible" width="750px">
+      <memberDialog></memberDialog>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import api from '@/fetch/api'
+import placeComponent from '@/components/place'
+import memberDialog from '@/components/memberDialog'
+import projectExpandInfo from '@/assets/dicData/projectExpandInfo.js'
+import {
+  areaTypeList,
+  hospitalRankList,
+  schoolTypeList,
+  railwayRankList,
+  trafficTypeList,
+  highwayRankList,
+  starRankList
+} from '@/assets/dicData/dicOption.js'
+import { mapState } from 'vuex'
+
+export default {
+  components: {
+    placeComponent,
+    memberDialog
+  },
+  computed: {
+    ...mapState({
+      memberFromStore: state => state.memberList.memberData.map(item => item.realName).join(','),
+      memberIds: state => state.memberList.memberData.map(item => item.id)
+    })
+  },
+  data() {
+    var validateIndustryBelong = (rule, value, callback) => {
+      if (value === '') return callback(new Error('请选择项目行业'))
+      if (value === '其他行业' && !this.baseFormData.industryBelongOther) {
+        /* 选中其他时，跳过二级行业验证 */
+        this.$refs.baseForm.clearValidate('subIndustryBelong')
+        callback(new Error('请输入项目行业!'))
+      } else {
+        callback()
+      }
+    }
+    var validateSubIndustryBelongCode = (rule, value, callback) => {
+      if (!this.IndustrySecond.length) return callback()
+      if (value === '') return callback(new Error('请选择项目行业'))
+      if (value === '其他' && !this.baseFormData.subIndustryBelongOther) {
+        callback(new Error('请输入项目行业!'))
+      } else {
+        callback()
+      }
+    }
+    var checkBuildingArea = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写规划建筑面积'))
+      if (!/^(0|[1-9]\d*)(\s|$|\.\d{1,2}\b)/.test(value)) return callback(new Error('规划建筑面积最多包含两位小数'))
+      callback()
+    }
+    var checkFloorArea = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写占地面积'))
+      if (!/^(0|[1-9]\d*)(\s|$|\.\d{1,2}\b)/.test(value)) return callback(new Error('占地面积最多包含两位小数'))
+      callback()
+    }
+    var checkHandleCapacity = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写日处理量'))
+      if (!/^[1-9]\d*|0$/.test(value)) return callback(new Error('日处理量为非负整数'))
+      callback()
+    }
+    var checkPlanCapacity = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写规划容量'))
+      if (!/^[1-9]\d*|0$/.test(value)) return callback(new Error('规划容量为非负整数'))
+      callback()
+    }
+    var checkProjectScale = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写建设规模'))
+      if (!/^[1-9]\d*|0$/.test(value)) return callback(new Error('建设规模为非负整数'))
+      callback()
+    }
+    var checkTotalKm = (rule, value, callback) => {
+      if (!value) return callback(new Error('请填写线路规划总里程长度'))
+      if (!/^(0|[1-9]\d*)(\s|$|\.\d{1,2}\b)/.test(value)) return callback(new Error('线路规划总里程长度最多包含两位小数'))
+      callback()
+    }
+    var checkTransportVolum = (rule, value, callback) => {
+      if (!this.expandFormData.transportVolum && !this.expandFormData.transportVolum2)
+        return callback(new Error('请填写年客货运量'))
+      if (!!this.expandFormData.transportVolum && !/^(0|[1-9]\d*)(\s|$|\.\d{1,2}\b)/.test(this.expandFormData.transportVolum))
+        return callback(new Error('年客货运量最多包含两位小数'))
+      if (!!this.expandFormData.transportVolum2 && !/^(0|[1-9]\d*)(\s|$|\.\d{1,2}\b)/.test(this.expandFormData.transportVolum2))
+        return callback(new Error('年客货运量最多包含两位小数'))
+      callback()
+    }
+    var checkVolumeRate = (rule, value, callback) => {
+      // 非必填
+      if (!!value && !/(^([0-9])(\.\d{1,2})?$)|(^10(\.[0]{1,2})?$)/.test(value))
+        return callback(new Error('容积率为0-10的两位小数'))
+      callback()
+    }
+    var checkGreeningRate = (rule, value, callback) => {
+      // 非必填
+      if (!!value && !/(^(\d|[1-9]\d)(\.\d{1,2})?$)|(^100(\.[0]{1,2})?$)/.test(value))
+        return callback(new Error('绿化率为0-100的两位小数'))
+      callback()
+    }
+    return {
+      baseFormRules: {
+        industryBelong: [{ validator: validateIndustryBelong, trigger: 'change' }],
+        subIndustryBelong: [{ validator: validateSubIndustryBelongCode, trigger: 'change' }],
+        projectName: [{ required: true, message: '请填写项目名称', trigger: 'blur' }],
+        doSide: [{ required: true, message: '请填写建设单位', trigger: 'blur' }],
+        nature: [{ required: true, message: '请选择建设性质', trigger: 'change' }]
+      },
+      expandFormRules: {
+        volumeRate: [{ validator: checkVolumeRate, trigger: 'blur' }],
+        greeningRate: [{ validator: checkGreeningRate, trigger: 'blur' }],
+        provinceCode: [{ required: true, message: '请选择项目地点', trigger: 'change' }],
+        areaType: [{ required: true, message: '请选择地区类别', trigger: 'change' }],
+        buildingArea: [{ validator: checkBuildingArea, trigger: 'blur' }],
+        floorArea: [{ validator: checkFloorArea, trigger: 'blur' }],
+        schoolType: [{ required: true, message: '请选择学校类别', trigger: 'change' }],
+        hospitalRank: [{ required: true, message: '请选择医院规划等级', trigger: 'change' }],
+        projectScale: [{ validator: checkProjectScale, trigger: 'blur' }],
+        handleCapacity: [{ validator: checkHandleCapacity, trigger: 'blur' }],
+        planCapacity: [{ validator: checkPlanCapacity, trigger: 'blur' }],
+        totalKm: [{ validator: checkTotalKm, trigger: 'blur' }],
+        transportVolum: [{ validator: checkTransportVolum, trigger: 'blur' }],
+        importantCity: [{ required: true, message: '请选择项目途经重要节点城市', trigger: 'change' }],
+        railwayRank: [{ required: true, message: '请选择铁路等级', trigger: 'change' }],
+        trafficType: [{ required: true, message: '请选择城市轨道交通类别', trigger: 'change' }],
+        highwayRank: [{ required: true, message: '请选择公路等级', trigger: 'change' }],
+        starRank: [{ required: true, message: '请选择酒店星级', trigger: 'change' }]
+      },
+      pickerOptionsEnd: {
+        disabledDate: time => {
+          let start = this.baseFormData.projectStart
+          return start ? time.getTime() < new Date(start).getTime() : ''
+        }
+      },
+      pickerOptionsStart: {
+        disabledDate: time => {
+          let end = this.baseFormData.projectEnd
+          return end ? time.getTime() > new Date(end).getTime() : ''
+        }
+      },
+      baseFormData: {
+        provinceCode: '',
+        provinceName: '',
+        cityCode: '',
+        cityName: '',
+        distinctCode: '',
+        distinctName: '',
+        doSide: '',
+        flag: '',
+        // id: 0,
+        importantCities: '',
+        industryBelong: '',
+        industryBelongCode: '',
+        industryBelongOther: '',
+        members: [],
+        nature: '',
+        projectEnd: '',
+        projectName: '',
+        projectStart: '',
+        subIndustryBelong: '',
+        subIndustryBelongCode: '',
+        subIndustryBelongOther: ''
+      },
+      expandFormData: {},
+      waitTime: false,
+      IndustryBelongFirst: [],
+      IndustrySecond: [],
+      ProjectNature: [],
+      projectExpandInfo,
+      areaTypeList,
+      hospitalRankList,
+      schoolTypeList,
+      railwayRankList,
+      trafficTypeList,
+      highwayRankList,
+      starRankList,
+      showExpandForm: false,
+      isDuplicateName: ''
+    }
+  },
+  created() {
+    // 项目行业
+    api.getIndustryBelongFirst().then(res => (this.IndustryBelongFirst = res.data))
+    // 建设性质
+    api.getProjectNature().then(res => (this.ProjectNature = res.data))
+  },
+  mounted() {
+    this.$store.state.memberList.memberData = [{ id: localStorage.userId * 1, realName: localStorage.realName }]
+  },
+  methods: {
+    // 项目行业第一级变化
+    belongChange(name) {
+      this.baseFormData.industryBelongCode = this.IndustryBelongFirst.find(item => item.name === name).id
+      // 获取项目行业二级
+      api.getIndustrySecondByParentId(this.baseFormData.industryBelongCode).then(res => {
+        this.IndustrySecond = res.data
+        /* 清空所填写的其他行业 */
+        this.baseFormData.industryBelongOther = ''
+        /* 清空所填写的其他 */
+        this.baseFormData.subIndustryBelongOther = ''
+        /* 清空所选中的二级 */
+        this.baseFormData.subIndustryBelong = ''
+      })
+    },
+    // 项目行业第二级变化
+    subBelongChange(name) {
+      let secondSel = this.IndustrySecond.find(item => item.name === name)
+      this.baseFormData.subIndustryBelongCode = secondSel.id
+      this.baseFormData.flag = secondSel.projectx.toLowerCase()
+      this.expandFormData = {}
+      this.$nextTick(() => {
+        this.$refs.expandForm.resetFields()
+        this.expandFormData = this.projectExpandInfo[secondSel.projectx]
+      })
+    },
+    // 获取地址的名称和编码
+    getPlace(name, code) {
+      if (!name.length) return
+      this.expandFormData.provinceCode = code[0]
+      // 省市区改传到baseFormData里
+      this.baseFormData.provinceCode = code[0]
+      this.baseFormData.provinceName = name[0]
+      this.baseFormData.cityCode = code[1]
+      this.baseFormData.cityName = name[1]
+      this.baseFormData.distinctCode = code[2]
+      this.baseFormData.distinctName = name[2]
+      this.$refs['address'].clearValidate()
+    },
+    getImportantCity(name) {
+      if (!name.length) return
+      this.expandFormData.importantCity = name.join('，')
+      // 重要节点城市改传到baseFormData里
+      this.baseFormData.importantCities = name.join('，')
+      this.$refs['cities'].clearValidate()
+    },
+    fnClear() {
+      this.$refs['baseForm'].resetFields()
+      this.$refs['expandForm'].resetFields()
+      this.IndustrySecond = []
+      this.baseFormData.projectStart = ''
+      this.baseFormData.projectEnd = ''
+      this.$store.commit('CLEARUSER')
+      this.expandFormData = {}
+    },
+    createProjectClick() {
+      if (this.waitTime) return
+      this.$refs['baseForm'].validate(valid1 => {
+        if (!valid1) return
+        this.$refs['expandForm'].validate(valid2 => {
+          if (!valid2) return
+          this.waitTime = true
+          this.baseFormData.members = this.memberIds
+          api
+            .saveOrUpdateProject({
+              commonReq: this.baseFormData,
+              [this.baseFormData.flag]: this.expandFormData
+            })
+            .then(res => {
+              this.$message({ showClose: true, type: 'success', message: '新建成功！' })
+              this.$router.push('/createProject/finishProject?id=' + res.data)
+            })
+            .finally(() => (this.waitTime = false))
+        })
+      })
+    },
+    duplicateNames(e) {
+      if (!this.baseFormData.projectName) return this.isDuplicateName = ''
+      api.duplicateNames(this.baseFormData.projectName).then(res => (this.isDuplicateName = res.data))
+    }
+  }
+}
+</script>
+
+<style lang="less" scoped>
+.create-info-title {
+  font-size: 16px;
+  margin-bottom: 20px;
+  margin-left: 84px;
+}
+.form-content {
+  padding: 20px;
+}
+.footer-btn {
+  padding: 22px 0 40px;
+  text-align: center;
+  font-size: 14px;
+  border-top: 1px solid RGBA(239, 242, 249, 1);
+  .cancel-btn {
+    display: inline-block;
+    width: 70px;
+    line-height: 30px;
+    color: RGBA(102, 102, 102, 1);
+    background-color: RGBA(233, 237, 243, 1);
+    cursor: pointer;
+  }
+  .new-btn {
+    display: inline-block;
+    width: 90px;
+    line-height: 30px;
+    color: #fff;
+    background-color: RGBA(68, 207, 150, 1);
+    margin-left: 30px;
+    cursor: pointer;
+    &.wait {
+      background-color: #aaa;
+    }
+  }
+}
+// .el-checkbox,
+// .el-radio {
+//   margin-left: 30px;
+// }
+// .el-checkbox-group,
+// .el-radio-group {
+//   position: relative;
+//   left: -30px;
+// }
+.el-radio-group {
+  line-height: inherit;
+  font-size: inherit;
+}
+.subType-input {
+  width: 50px;
+  border: none;
+  border-bottom: 1px solid #aaa;
+}
+.active-input {
+  border-bottom: 1px solid #4574d0;
+}
+.member-input {
+  width: 520px;
+  /deep/ .el-input__inner {
+    color: #606266;
+  }
+}
+.btn-member {
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 36px;
+  color: #4574d0;
+}
+.child-radio {
+  background-color: #fafafb;
+  padding: 0 20px;
+}
+.other-input {
+  border: 0 none;
+  border-bottom: 1px solid #dcdfe6;
+  color: #606266;
+  padding: 0 10px;
+  width: 100px;
+  background-color: inherit;
+}
+</style>

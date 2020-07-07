@@ -1,0 +1,85 @@
+<!--  -->
+<template>
+  <div class="li-box">
+    <div v-if="$props.info">
+      <li>
+        <span>占地面积:</span>
+        <span>{{ruleForm.monomerArea}}㎡</span>
+      </li>
+      <li>
+        <span>建筑面积:</span>
+        <span>{{ruleForm.buildArea}}㎡</span>
+      </li>
+      <li>
+        <span>层数:</span>
+        <span>{{ruleForm.floors}}层</span>
+      </li>
+    </div>
+    <div v-else>
+      <li>
+        <el-form-item label="有无桩基工程:" prop="ifpile">
+          <el-select v-model="ruleForm.ifpile" placeholder="有无桩基工程">
+            <el-option label="有" value="true"></el-option>
+            <el-option label="无" value="false"></el-option>
+          </el-select>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="结构类型:" prop="structureType">
+          <el-select v-model="ruleForm.structureType" multiple collapse-tags placeholder="请选择结构类型">
+            <el-option v-for="item in structureList" :key="item.id" :label="item.name" :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="主体建安工程价格信息取定时间:" prop="selectedDate" id='time' class="special-item">
+          <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.selectedDate" style="width: 100%;" value-format="yyyy-MM-dd"></el-date-picker>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="占地面积(㎡):" prop="monomerArea">
+          <el-input class="short-input" v-model="ruleForm.monomerArea">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="建筑面积(㎡):" prop="buildArea">
+          <el-input class="short-input" v-model="ruleForm.buildArea">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="层数(层):" prop="floors">
+          <el-input class="short-input" v-model="ruleForm.floors">
+          </el-input>
+        </el-form-item>
+      </li>
+    </div>
+  </div>
+
+</template>
+<script>
+import api from '@/fetch/api'
+export default {
+  props: {
+    ruleForm: Object,
+    info: Boolean
+  },
+  watch: {},
+  data() {
+    return {
+      structureList: []
+    }
+  },
+  methods: {},
+  mounted() {
+    api.getDicCommon(9).then(res => {
+      this.structureList = res.data
+    })
+  }
+}
+</script>
+
+<style lang="less" scoped>
+</style>

@@ -1,0 +1,93 @@
+<template>
+  <div class="filter-list">
+    <span>项目行业：</span>
+    <div>
+      <ul>
+        <li v-for="(item,index) in IndustryBelongFirst" :key="index">
+          <label>
+            <input type="radio" v-model="firstSel" :value="item" @change="IndustryBelongFirstSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <ul v-show="IndustryBelongSecond.length">
+        <li v-for="(item,index) in IndustryBelongSecond" :key="index">
+          <label>
+            <input type="radio" v-model="secondSel" :value="item" @change="industryBelongSecondSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import { mapMutations } from 'vuex'
+export default {
+  data() {
+    return {
+      IndustryBelongFirst: [], // 项目行业
+      IndustryBelongSecond: [], // 项目行业二级
+      // 项目行业
+      firstSel: {
+        id: '',
+        name: '不限'
+      },
+      // 项目行业二级
+      secondSel: {
+        id: '',
+        name: '不限',
+        projectx: ''
+      }
+    }
+  },
+  methods: {
+    ...mapMutations(['setSingleItemFilterData']),
+    // 获取项目行业
+    getIndustryBelongFirst() {
+      api.getIndustryBelongFirst().then(res => {
+        res.data.unshift({ name: '不限', id: '' })
+        this.IndustryBelongFirst = res.data
+      })
+    },
+    // 选择项目行业
+    IndustryBelongFirstSel(item) {
+      // 当项目行业一级为不限时，清空二级
+      if (!item.id) {
+        this.IndustryBelongSecond = []
+      } else {
+        this.getIndustrySecondByParentId(item.id)
+      }
+      this.secondSel = { id: '', name: '不限', projectx: '' }
+      this.industryBelongSecondSel(this.secondSel)
+    },
+    // 获取项目行业二级
+    getIndustrySecondByParentId(id) {
+      api.getIndustrySecondByParentId(id).then(res => {
+        res.data.unshift({ name: '不限', id: '', projectx: '' })
+        this.IndustryBelongSecond = res.data
+      })
+    },
+    // 选择项目行业二级
+    industryBelongSecondSel(item) {
+      let industryBelongSel = item.id ? this.firstSel.name + '-' + item.name : this.firstSel.name
+      this.setSingleItemFilterData({
+        dataForBack: {
+          industryBelongCode: this.firstSel.id,
+          subIndustryBelongCode: item.id,
+          flag: item.projectx
+        },
+        dynamicTags: { industryBelongSel }
+      })
+    }
+  },
+  mounted() {
+    this.getIndustryBelongFirst()
+  }
+}
+</script>
+<style lang="less" scoped>
+@import './filter-option.less';
+</style>

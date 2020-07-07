@@ -1,0 +1,118 @@
+<!--  -->
+<template>
+  <div class="li-box">
+    <div v-if="$props.info">
+      <li>
+        <span>占地面积:</span>
+        <span>{{ruleForm.monomerArea}}㎡</span>
+      </li>
+      <li>
+        <span>地上建筑面积:</span>
+        <span>{{ruleForm.groundArea}}㎡</span>
+      </li>
+      <li>
+        <span>地下建筑面积:</span>
+        <span>{{ruleForm.undergroundArea}}㎡</span>
+      </li>
+      <li>
+        <span>地上层数:</span>
+        <span>{{ruleForm.groundFloors}}层</span>
+      </li>
+      <li>
+        <span>地下层数:</span>
+        <span>{{ruleForm.undergroundFloors}}层</span>
+      </li>
+      <li>
+        <span>床位数:</span>
+        <span>{{ruleForm.bedNumber}}位</span>
+      </li>
+    </div>
+    <div v-else>
+      <li>
+        <el-form-item label="有无桩基工程:" prop="ifpile">
+          <el-select v-model="ruleForm.ifpile" placeholder="有无桩基工程">
+            <el-option label="有" value="true"></el-option>
+            <el-option label="无" value="false"></el-option>
+          </el-select>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="结构类型:" prop="structureType">
+          <el-select v-model="ruleForm.structureType" multiple collapse-tags placeholder="请选择结构类型">
+            <el-option v-for="item in structureList" :key="item.id" :label="item.name" :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="主体建安工程价格信息取定时间:" prop="selectedDate" id='time' class="special-item">
+          <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.selectedDate" style="width: 100%;" value-format="yyyy-MM-dd"></el-date-picker>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="占地面积(㎡):" prop="monomerArea">
+          <el-input class="short-input" v-model="ruleForm.monomerArea">
+          </el-input>
+        </el-form-item>
+      </li>
+
+      <li>
+        <el-form-item label="地上建筑面积(㎡):" prop="groundArea">
+          <el-input class="short-input" v-model="ruleForm.groundArea">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="地下建筑面积(㎡):" prop="undergroundArea">
+          <el-input class="short-input" v-model="ruleForm.undergroundArea">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="地上层数(层):" prop="groundFloors">
+          <el-input class="short-input" v-model="ruleForm.groundFloors">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="地下层数(层):" prop="undergroundFloors">
+          <el-input class="short-input" v-model="ruleForm.undergroundFloors">
+          </el-input>
+        </el-form-item>
+      </li>
+      <li>
+        <el-form-item label="床位数(位):" prop="bedNumber">
+          <el-input class="short-input" v-model="ruleForm.bedNumber">
+          </el-input>
+        </el-form-item>
+      </li>
+    </div>
+  </div>
+
+</template>
+
+<script>
+import api from '@/fetch/api'
+export default {
+  props: {
+    ruleForm: Object,
+    info: Boolean
+  },
+  watch: {},
+  data() {
+    return {
+      structureList: []
+    }
+  },
+  methods: {},
+  mounted() {
+    api.getDicCommon(9).then(res => {
+      this.structureList = res.data
+    })
+  }
+}
+</script>
+
+<style lang="less" scoped>
+</style>
+

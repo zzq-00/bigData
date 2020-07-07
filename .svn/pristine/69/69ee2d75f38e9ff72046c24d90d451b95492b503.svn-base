@@ -1,0 +1,143 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <ul>
+        <li>
+          <label>
+            <span :class="{active: !conditionParams.value.length}" @click="select('不限')">不限</span>
+          </label>
+        </li>
+        <template v-if="noId">
+          <li v-for="(item,index) in List" :key="index">
+            <label>
+              <input type="checkbox" v-model="conditionParams.value" :value="item" @change="select(item)">
+              <span>{{item}}</span>
+            </label>
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="(item,index) in List" :key="index">
+            <label>
+              <input type="checkbox" v-model="conditionParams.value" :value="item.id" @change="select(item)">
+              <span>{{item.name}}</span>
+            </label>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import { hospitalRankList, schoolTypeList, railwayRankList, highwayRankList, starRankList } from '@/assets/dicData/dicOption.js'
+export default {
+  props: {
+    title: String
+  },
+  data() {
+    return {
+      List: [],
+      conditionParams: {
+        value: []
+      }
+    }
+  },
+  computed: {
+    noId() {
+      return ['医院规划等级', '学校类别', '铁路等级', '公路等级', '项目公路等级', '酒店星级'].includes(this.title)
+    }
+  },
+  methods: {
+    // 获取建设性质
+    getProjectNature() {
+      api.getProjectNature().then(res => (this.List = res.data))
+    },
+    // 获取编制阶段
+    getStages() {
+      api.getStages().then(res => (this.List = res.data))
+    },
+    getDicCommon(type) {
+      api.getDicCommon(type).then(res => (this.List = res.data))
+    },
+    select(item) {
+      if (item === '不限') this.conditionParams.value = []
+      // this.dynamicTags.select = item.name === '不限' ? '' : item.name
+    }
+  },
+  mounted() {
+    switch (this.title) {
+      case '单项工程公路等级':
+        this.getDicCommon(21)
+        break
+      case '面层类别':
+        this.getDicCommon(12)
+        break
+      case '化工产品类别':
+        this.getDicCommon(7)
+        break
+      case '加油站等级':
+        this.getDicCommon(8)
+        break
+      case '储油类别':
+        this.getDicCommon(3)
+        break
+      case '原材料类别':
+        this.getDicCommon(15)
+        break
+      case '产品类别':
+        this.getDicCommon(1)
+        break
+      case '围墙类型':
+        this.getDicCommon(13)
+        break
+      case '储存方式':
+        this.getDicCommon(2)
+        break
+      case '运输方式':
+        this.getDicCommon(16)
+        break
+      case '开采地址类型':
+        this.getDicCommon(10)
+        break
+      case '学制':
+        this.getDicCommon(17)
+        break
+      case '充电站等级':
+        this.getDicCommon(19)
+        break
+      case '充电桩类别':
+        this.getDicCommon(18)
+        break
+      case '结构类型':
+        this.getDicCommon(9)
+        break
+      case '建设性质':
+        this.getProjectNature()
+        break
+      case '单项工程编制阶段':
+        this.getStages()
+        break
+      case '医院规划等级':
+        this.List = hospitalRankList
+        break
+      case '学校类别':
+        this.List = schoolTypeList
+        break
+      case '铁路等级':
+        this.List = railwayRankList
+        break
+      case '项目公路等级':
+        this.List = highwayRankList
+        break
+      case '酒店星级':
+        this.List = starRankList
+        break
+    }
+  }
+}
+</script>
+<style lang="less" scoped>
+@import '../filter-option.less';
+</style>

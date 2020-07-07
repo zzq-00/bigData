@@ -1,0 +1,52 @@
+<template>
+  <div>
+    <breadcrumb :breadcrumbs="breadcrumbs" />
+    <div class="container main">
+      <filterMain placeholder="搜索单项工程名称" @getValue="getValue" />
+    </div>
+  </div>
+</template>
+
+<script>
+import filterMain from '@/components/filterMain/index'
+import breadcrumb from '@/components/breadcrumb'
+import api from '@/fetch/api'
+
+export default {
+  components: {
+    breadcrumb,
+    filterMain
+  },
+  data() {
+    return {
+      breadcrumbs: [{ name: '单项工程指标库', path: this.$route.fullPath }],
+      params: {
+        flag: 'X001',
+        indexCode: 'T043'
+      }
+    }
+  },
+  methods: {
+    getValue(value) {
+      Object.assign(this.params, value)
+      this.getSingleProjectByCondition()
+    },
+    getSingleProjectByCondition() {
+      api.getSingleProjectByCondition(this.params).then(res => {})
+    }
+  },
+  mounted() {
+    this.getSingleProjectByCondition()
+  }
+}
+</script>
+
+<style lang="less" scoped>
+.container {
+  box-sizing: border-box;
+  &.main {
+    padding: 15px 0;
+    min-height: e('calc(100vh - 90px)');
+  }
+}
+</style>

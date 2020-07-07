@@ -1,0 +1,740 @@
+<template>
+  <div class="res-lists">
+    <div class="proRig">
+      <span class="total">共有 {{pageData.totalElements}} 条数据</span>
+      <span v-show="pageData.totalElements" style="margin: 0 10px;">
+        <el-button type="text" icon="el-icon-arrow-left" :disabled="pageData.page==1" @click="paging('-')"></el-button>
+        <span>{{pageData.page}}/{{pageData.totalPages}} </span>
+        <el-button type="text" icon="el-icon-arrow-right" :disabled="pageData.page==pageData.totalPages" @click="paging('+')"></el-button>
+      </span>
+    </div>
+    <nav class="nav-title">
+      所有符合条件结果
+      <!-- <span :class="[queryParameters.endtimesort==='desc'?(queryParameters.endtimeValue?'activeup':'up'):(queryParameters.endtimeValue?'activedown':'down'), 'sort-icon sort-icon1']" @click="sortClick('endtime')">竣工排序</span> -->
+      <!-- <span :class="[queryParameters.starttimesort==='desc'?(queryParameters.starttimeValue?'activeup':'up'):(queryParameters.starttimeValue?'activedown':'down'), 'sort-icon sort-icon2']" @click="sortClick('starttime')">开工排序</span> -->
+      <span :class="[queryParameters.pricesort==='desc'?(queryParameters.priceValue?'activeup':'up'):(queryParameters.priceValue?'activedown':'down'), 'sort-icon sort-icon3']" @click="sortClick('price')">价格排序</span>
+    </nav>
+    <ul class="lists" v-if="dataList" v-loading="dataWait">
+      <!-- <li v-for="item in dataList" :key="item.id"> -->
+      <li v-for="(item,index) in dataList" :key="index">
+        <router-link :to="'/indicatorLibrary/singleDetails/'+item.id+'?projectId='+item.projectId">
+          <div class="a-list">
+            <p class="title" v-html="item.projectName"></p>
+            <div class="sub-lists">
+              <ul class="sub-list">
+                <!-- 项目信息表 -->
+                <li v-if="item.nature">
+                  <span class="text">建设性质：{{item.nature}}</span>
+                </li>
+                <li v-if="item.transportVolum1 || item.transportVolum2">
+                  <span class="text">年客货运量：{{item.transportVolum1 || item.transportVolum2}} （万吨/万人）</span>
+                </li>
+                <li v-if="item.commonProjectLocation">
+                  <span class="text">项目地点：{{item.commonProjectLocation}}</span>
+                </li>
+                <li v-if="item.commonAreaType">
+                  <span class="text">项目地区类别：{{item.commonAreaType}}</span>
+                </li>
+                <li v-if="item.highwayRank">
+                  <span class="text">项目公路等级：{{item.highwayRank}} </span>
+                </li>
+                <li v-if="item.commonPlanCapacity">
+                  <span class="text">项目规划容量：{{item.commonPlanCapacity}} （万kVA）</span>
+                </li>
+                <li v-if="item.projectIndustry">
+                  <span class="text">项目行业：{{item.projectIndustry}}</span>
+                </li>
+                <!-- 单项工程信息表 -->
+                <li v-if="item.stage">
+                  <span class="text">编制阶段：{{item.stage}}</span>
+                </li>
+                <!-- 本期容量 -->
+                <li v-if="item.undergroundMainMethods">
+                  <span class="text">暗挖主要工法：{{item.undergroundMainMethods}}</span>
+                </li>
+                <li v-if="item.currentCapacity &&
+                  (singleItemFilterData.indexCode === 'T008' || singleItemFilterData.indexCode === 'T015' || singleItemFilterData.indexCode === 'T018')">
+                  <span class="text">本期容量：{{item.currentCapacity}}（MW）</span>
+                </li>
+                <li v-if="item.currentCapacity && singleItemFilterData.indexCode === 'T003'">
+                  <span class="text">本期容量：{{item.currentCapacity}}（万kVA）</span>
+                </li>
+                <li v-if="item.periodNumber">
+                  <span class="text">本期台数：{{item.periodNumber}}（台）</span>
+                </li>
+                <li v-if="item.floors">
+                  <span class="text">层数：{{item.floors}}（层）</span>
+                </li>
+                <li v-if="item.productsTypeStr">
+                  <span class="text">产品类别：{{item.productsTypeStr}}</span>
+                </li>
+                <li v-if="item.numberOfCars">
+                  <span class="text">车位数：{{item.numberOfCars}}（个）</span>
+                </li>
+                <li v-if="item.layerNumber">
+                  <span class="text">车站层数：{{item.layerNumber}} （层）</span>
+                </li>
+                <!-- 车站建筑面积(主体+附属)(㎡)    总面积(㎡) -->
+                <li v-if="item.totalArea && (singleItemFilterData.indexCode === 'T016' || singleItemFilterData.indexCode === 'T034')">
+                  <span class="text">总面积：{{item.totalArea}}（㎡）</span>
+                </li>
+                <li v-if="item.totalArea && 
+                (singleItemFilterData.indexCode === 'T001'
+                  || singleItemFilterData.indexCode === 'T009' 
+                  || singleItemFilterData.indexCode === 'T011' 
+                  || singleItemFilterData.indexCode === 'T026'
+                  || singleItemFilterData.indexCode === 'T035')">
+                  <span class="text">车站建筑面积(主体+附属)：{{item.totalArea}} （㎡）</span>
+                </li>
+                <li v-if="item.mainArea">
+                  <span class="text">车站主体建筑面积：{{item.mainArea}} （㎡）</span>
+                </li>
+                <li v-if="item.otherArea">
+                  <span class="text">车站附属建筑面积：{{item.otherArea}} （㎡）</span>
+                </li>
+                <li v-if="item.stationClassStr">
+                  <span class="text">充电站等级：{{item.stationClassStr}}</span>
+                </li>
+                <li v-if="item.chargeTypeStr">
+                  <span class="text">充电桩类别：{{item.chargeTypeStr}}</span>
+                </li>
+                <li v-if="item.storageModeStr">
+                  <span class="text">储存方式：{{item.storageModeStr}}</span>
+                </li>
+                <li v-if="item.gasTypeStr">
+                  <span class="text">储油类别：{{item.gasTypeStr}}条</span>
+                </li>
+                <li v-if="item.gasCapacity">
+                  <span class="text">储油总容积：{{item.gasCapacity}}（m³）</span>
+                </li>
+                <li v-if="item.storageMediumStr">
+                  <span class="text">储运介质：{{item.storageMediumStr}}</span>
+                </li>
+                <li v-if="item.storageCapacity">
+                  <span class="text">存储容量：{{item.storageCapacity}}（m³）</span>
+                </li>
+                <li v-if="item.areaType">
+                  <span class="text">单项工程地区类别：{{item.areaType}}</span>
+                </li>
+                <li v-if="item.monomerType">
+                  <span class="text">单项工程分类：{{item.monomerType}}</span>
+                </li>
+                <li v-if="item.highwayGradeStr">
+                  <span class="text">单项工程公路等级：{{item.highwayGradeStr}}</span>
+                </li>
+                <li v-if="item.planCapacity">
+                  <span class="text">单项工程规划容量：{{item.planCapacity}}（万kVA）</span>
+                </li>
+                <li v-if="item.bedTypeStr">
+                  <span class="text">道床类型：{{item.bedTypeStr}}</span>
+                </li>
+                <li v-if="item.groundPractice">
+                  <span class="text">地面做法：{{item.groundPractice}}</span>
+                </li>
+                <li v-if="item.groundFloors">
+                  <span class="text">地上层数：{{item.groundFloors}}（层）</span>
+                </li>
+                <li v-if="item.undergroundFloors">
+                  <span class="text">地下层数：{{item.undergroundFloors}}（层）</span>
+                </li>
+                <li v-if="item.groundArea">
+                  <span class="text">地上建筑面积：{{item.groundArea}}（㎡）</span>
+                </li>
+                <li v-if="item.undergroundArea">
+                  <span class="text">地下建筑面积：{{item.undergroundArea}}（㎡）</span>
+                </li>
+                <!-- 供电电压等级（KV） 电压等级（KV） 送出电压等级（KV） -->
+                <li v-if="item.voltageGrade && 
+                (singleItemFilterData.indexCode === 'T002'
+                  || singleItemFilterData.indexCode === 'T006' 
+                  || singleItemFilterData.indexCode === 'T010' 
+                  || singleItemFilterData.indexCode === 'T012'
+                  || singleItemFilterData.indexCode === 'T027'
+                  || singleItemFilterData.indexCode === 'T036')">
+                  <span class="text">供电电压等级：{{item.voltageGrade}}（KV）</span>
+                </li>
+                <li v-if="item.voltageGrade && 
+                (singleItemFilterData.indexCode === 'T003'|| singleItemFilterData.indexCode === 'T008')">
+                  <span class="text">电压等级：{{item.voltageGrade}}（KV）</span>
+                </li>
+                <li v-if="item.voltageGrade &&
+                (singleItemFilterData.indexCode === 'T015'|| singleItemFilterData.indexCode === 'T018')">
+                  <span class="text">送出电压等级：{{item.voltageGrade}}（KV）</span>
+                </li>
+                <li v-if="item.shieldMainMethods">
+                  <span class="text">盾构主要工法：{{item.shieldMainMethods}}</span>
+                </li>
+                <li v-if="item.digMainMethods">
+                  <span class="text">盖挖主要工法：{{item.digMainMethods}}</span>
+                </li>
+                <li v-if="item.projectLocation">
+                  <span class="text">工程地点：{{item.projectLocation}}</span>
+                </li>
+                <li v-if="item.viaCity">
+                  <span class="text">工程途经重要节点城市：{{item.viaCity}}</span>
+                </li>
+                <li v-if="item.processType">
+                  <span class="text">工艺类别：{{item.processType}}</span>
+                </li>
+                <li v-if="item.pipeType">
+                  <span class="text">管道结构形式：{{item.pipeType}}</span>
+                </li>
+                <li v-if="item.pipeAvgDept">
+                  <span class="text">管道平均埋深：{{item.pipeAvgDept}}（m）</span>
+                </li>
+                <li v-if="item.pipelineLength">
+                  <span class="text">管道长度：{{item.pipelineLength}}（m）</span>
+                </li>
+                <li v-if="item.pipeDiameter">
+                  <span class="text">管道直径：{{item.pipeDiameter}}（mm）</span>
+                </li>
+                <li v-if="item.orbitType">
+                  <span class="text">轨道类型：{{item.orbitType}}</span>
+                </li>
+                <li v-if="item.chemicalProductsTypeStr">
+                  <span class="text">化工产品类别：{{item.chemicalProductsTypeStr}}</span>
+                </li>
+                <li v-if="item.transferNumber">
+                  <span class="text">换乘通道个数：{{item.transferNumber}} （条）</span>
+                </li>
+                <li v-if="item.foundationType">
+                  <span class="text">基础类型：{{item.foundationType}}</span>
+                </li>
+                <li v-if="item.gasStationGradeStr">
+                  <span class="text">加油站等级：{{item.gasStationGradeStr}}</span>
+                </li>
+                <li v-if="item.buildArea">
+                  <span class="text">建筑面积：{{item.buildArea}}（㎡）</span>
+                </li>
+                <li v-if="item.structureTypeIdStr">
+                  <span class="text">结构类型：{{item.structureTypeIdStr}}</span>
+                </li>
+                <li v-if="item.miningAddressTypeStr">
+                  <span class="text">开采地址类型：{{item.miningAddressTypeStr}}</span>
+                </li>
+                <li v-if="item.miningTypeStr">
+                  <span class="text">开采类别：{{item.miningTypeStr}}</span>
+                </li>
+                <li v-if="item.afforestedArea">
+                  <span class="text">绿化面积：{{item.afforestedArea}}（㎡）</span>
+                </li>
+                <li v-if="item.surfaceCategoryStr">
+                  <span class="text">面层类别：{{item.surfaceCategoryStr}}</span>
+                </li>
+                <li v-if="item.productCapacity">
+                  <span class="text">年生产能力：{{item.productCapacity}}（桶油当量）</span>
+                </li>
+                <li v-if="item.transCapacity">
+                  <span class="text">年运输能力：{{item.transCapacity}}（m³）</span>
+                </li>
+                <li v-if="item.mainLength">
+                  <span class="text">其中正线铺轨长度：{{item.mainLength}} （m）</span>
+                </li>
+                <!-- 区间桥梁(含高架)总长(m) 桥梁长度(m) -->
+                <li v-if="item.bridgeLength && singleItemFilterData.indexCode === 'T028'">
+                  <span class="text">桥梁长度：{{item.bridgeLength}}（m）</span>
+                </li>
+                <li v-if="item.bridgeLength &&
+                (singleItemFilterData.indexCode === 'T036'|| singleItemFilterData.indexCode === 'T014')">
+                  <span class="text">区间桥梁(含高架)总长：{{item.bridgeLength}}（m）</span>
+                </li>
+                <li v-if="item.bridgeWidth">
+                  <span class="text">桥梁宽度：{{item.bridgeWidth}}（m）</span>
+                </li>
+                <li v-if="item.bridgeTall">
+                  <span class="text">桥梁高度：{{item.bridgeTall}}（m）</span>
+                </li>
+                <li v-if="item.bridgeSpan">
+                  <span class="text">桥梁跨数：{{item.bridgeSpan}}（孔）</span>
+                </li>
+                <li v-if="item.bridgeType">
+                  <span class="text">桥梁种类：{{item.bridgeType}}</span>
+                </li>
+                <li v-if="item.intervalArea">
+                  <span class="text">区间面积：{{item.intervalArea}} （㎡）</span>
+                </li>
+
+                <li v-if="item.passLength">
+                  <span class="text">区间隧道总长：{{item.passLength}}（m）</span>
+                </li>
+                <li v-if="item.intervalLength">
+                  <span class="text">区间长度：{{item.intervalLength}} （m）</span>
+                </li>
+                <li v-if="item.structuralType">
+                  <span class="text">区间主体围护结构方式：{{item.structuralType}}</span>
+                </li>
+                <!-- 设计生产能力 -->
+                <li v-if="item.designProductCapacity && 
+                (singleItemFilterData.indexCode === 'T029'|| singleItemFilterData.indexCode === 'T021')">
+                  <span class="text">设计生产能力：{{item.designProductCapacity}}万吨/年</span>
+                </li>
+                <li v-if="item.designProductCapacity && 
+                (singleItemFilterData.indexCode === 'T024'|| singleItemFilterData.indexCode === 'T025')">
+                  <span class="text">设计生产能力：{{item.designProductCapacity}}Mt/a</span>
+                </li>
+                <li v-if="item.passNumber">
+                  <span class="text">收费通道数量：{{item.passNumber}}（条）</span>
+                </li>
+                <li v-if="item.tunnelLength">
+                  <span class="text">隧道长度：{{item.tunnelLength}}（m）</span>
+                </li>
+                <li v-if="item.tunnelWidth">
+                  <span class="text">隧道宽度：{{item.tunnelWidth}}（m）</span>
+                </li>
+                <li v-if="item.tunnelTall">
+                  <span class="text">隧道高度：{{item.tunnelTall}}（m）</span>
+                </li>
+                <li v-if="item.towerWeight">
+                  <span class="text">塔筒总重：{{item.towerWeight}}（t）</span>
+                </li>
+                <li v-if="item.stadiumUse">
+                  <span class="text">体育场用途：{{item.stadiumUse}}</span>
+                </li>
+                <li v-if="item.wallTypeStr">
+                  <span class="text">围墙类型：{{item.wallTypeStr}}</span>
+                </li>
+                <li v-if="item.wallLength">
+                  <span class="text">围墙总长：{{item.wallLength}}（m）</span>
+                </li>
+                <li v-if="item.sewageTreatment">
+                  <span class="text">污水处理能力：{{item.sewageTreatment}}（万吨/日）</span>
+                </li>
+                <li v-if="item.lineLength">
+                  <span class="text">线路长度：{{item.lineLength}}（m）</span>
+                </li>
+                <li v-if="item.projectCapacity">
+                  <span class="text">项目容量：{{item.projectCapacity}}（MW）</span>
+                </li>
+                <li v-if="item.districtsGroundArea">
+                  <span class="text">小区占地面积：{{item.districtsGroundArea}}（㎡）</span>
+                </li>
+                <li v-if="item.coolingForm">
+                  <span class="text">循环水冷却形式：{{item.coolingForm}}</span>
+                </li>
+                <li v-if="item.eavesHeight">
+                  <span class="text">檐高(或建筑高度)：{{item.eavesHeight}}（m）</span>
+                </li>
+                <li v-if="item.hardAreaRatio">
+                  <span class="text">硬景面积占比：{{item.hardAreaRatio}}（%）</span>
+                </li>
+                <li v-if="item.ifZhuangji">
+                  <span class="text">有无桩基工程：{{item.ifZhuangji}}</span>
+                </li>
+                <li v-if="item.materialsTypeStr">
+                  <span class="text">原材料类别：{{item.materialsTypeStr}}</span>
+                </li>
+                <li v-if="item.shippingTypeStr">
+                  <span class="text">运输方式：{{item.shippingTypeStr}}</span>
+                </li>
+                <li v-if="item.monomerArea">
+                  <span class="text">占地面积：{{item.monomerArea}}（㎡）</span>
+                </li>
+                <li v-if="item.stationNumber">
+                  <span class="text">站内充电设施数量：{{item.stationNumber}}（台）</span>
+                </li>
+                <li v-if="item.squareArea">
+                  <span class="text">站前广场占地面积：{{item.squareArea}}（㎡）</span>
+                </li>
+                <li v-if="item.channelsNumber">
+                  <span class="text">主跑通道数量：{{item.channelsNumber}}（条）</span>
+                </li>
+                <li v-if="item.mainMethods">
+                  <span class="text">主要工法：{{item.mainMethods}}</span>
+                </li>
+                <li v-if="item.totalFloors">
+                  <span class="text">总层数：{{item.totalFloors}}（层）</span>
+                </li>
+                <li v-if="item.layLength">
+                  <span class="text">总铺轨长度：{{item.layLength}} （m）</span>
+                </li>
+              </ul>
+              <ul class="price-data">
+                <li>
+                  <span class="text">{{item.costByArea}} 元/㎡</span>
+                </li>
+                <li>
+                  <span class="text">{{item.selectedDate}}年 月</span>
+                </li>
+              </ul>
+            </div>
+            <p class="price" v-if="item.indicatorName === '钢筋算量指标'">
+              <span v-if="item.steelVolume">
+                {{Number(item.steelVolume).toFixed(2)}}<span class="unit">kg/m<sup>2</sup></span>
+              </span>
+            </p>
+            <p v-else-if="item.indicatorName === '土建算量指标'">
+              <span class="price" v-if="item.masonryVolume" :title="Number(item.masonryVolume).toFixed(2)">
+                {{Number(item.masonryVolume).toFixed(2)}}<span class="unit">m<sup>3</sup>/m<sup>2</sup>（砌体）</span>
+              </span>
+              <span class="civil-num" v-if="item.concreteVolume" :title="Number(item.concreteVolume).toFixed(2)">
+                {{Number(item.concreteVolume).toFixed(2)}}<span class="unit">m<sup>3</sup>/m<sup>2</sup>（混凝土）</span>
+              </span>
+            </p>
+            <p class="price" :title="Number(item.unitPrice).toFixed(2)" v-else-if="item.indicatorName === '造价指标' || item.indicatorName === '安装算量&造价指标'">{{Number(item.unitPrice).toFixed(2)}}<span class="unit">元/m<sup>2</sup></span></p>
+          </div>
+        </router-link>
+      </li>
+    </ul>
+    <p class="no-data" v-else>~无匹配数据~</p>
+    <div class="block">
+      <el-pagination :current-page="pageData.page" @current-change="handleCurrentChange" :page-sizes="[10, 20, 30, 40]" :page-size="10" layout=" sizes,prev, pager, next, jumper" :total="tableData.totalElements" @size-change="handleSizeChange">
+      </el-pagination>
+    </div>
+  </div>
+</template>
+<script>
+import { mapState } from 'vuex'
+import api from '@/fetch/api'
+
+export default {
+  props: {
+    // dataList: {
+    //   required: true
+    // },
+    // searchWord: {
+    //   type: String
+    // }
+    // pageData: {
+    //   type: Object
+    // }
+  },
+  data() {
+    return {
+      dataList: [],
+      pageData: {},
+      dataWait: false,
+      // currentPage: 1,
+      queryParameters: {
+        page: 1,
+        size: 10,
+        pricesort: 'asc',
+        endtimesort: 'desc',
+        starttimesort: 'asc',
+        priceValue: false,
+        endtimeValue: false,
+        starttimeValue: false
+      },
+      tableData: {
+        totalElements: 1,
+        totalPages: 0
+      }
+    }
+  },
+  watch: {
+    singleItemFilterData: {
+      handler: function(value) {
+        for (const key in value) {
+          if (value[key] == '' || value[key] == '不限') delete value[key]
+        }
+        this.getSingleProjectByCondition(value)
+      },
+      deep: true,
+      immediate: true
+    }
+  },
+  computed: mapState(['singleItemFilterData']),
+  methods: {
+    getSingleProjectByCondition(val) {
+      this.dataWait = true
+      api.getSingleProjectByCondition(val).then(res => {
+        this.dataWait = false
+        this.dataList = res.data
+        this.pageData.totalElements = res.count
+        // this.pageData.page = this.params.page
+        // this.pageData.totalPages = Math.ceil(res.count / this.params.size)
+      })
+    },
+    handleCurrentChange(val) {
+      this.queryParameters.page = val
+      this.$emit('handlePage', val)
+    },
+    handleSizeChange(val) {
+      // 强制回第一页
+      this.queryParameters.page = 1
+      this.queryParameters.size = val
+      this.$emit('handleSize', val)
+    },
+    sortClick(name) {
+      let sort = this.queryParameters[name + 'sort']
+      this.queryParameters.priceValue = false
+      this.queryParameters.endtimeValue = false
+      this.queryParameters.starttimeValue = false
+      this.queryParameters[name + 'Value'] = true
+      let value
+      // 升序false 降序true
+      if (sort === 'asc') {
+        sort = 'desc'
+        value = true
+      } else {
+        sort = 'asc'
+        value = false
+      }
+      this.queryParameters[name + 'sort'] = sort
+      this.$emit(`handle${name}sort`, value, name)
+    },
+    // 列表上部翻页
+    paging(val) {
+      if (val == '-') {
+        this.queryParameters.page = this.queryParameters.page - 1
+      }
+      if (val == '+') {
+        this.queryParameters.page = this.queryParameters.page + 1
+      }
+      this.$emit('handlePage', this.queryParameters.page)
+    }
+  }
+  // mounted() {
+  //   let val = this.dataList
+  //   this.tableData.totalPages = val.totalPages
+  //   this.tableData.totalElements = val.totalElements
+  // },
+  // activated() {
+  //   let val = this.dataList
+  //   this.tableData.totalPages = val.totalPages
+  //   this.tableData.totalElements = val.totalElements
+  //   // this.currentPage = this.pageData
+  // },
+  // watch: {
+  // dataList: function(val) {
+  //   // 分页
+  //   // this.currentPage = this.pageData
+  //   this.queryParameters.page = this.pageData
+  //   // 判断返回值
+  //   if (val) {
+  //     this.tableData.totalPages = val.totalPages
+  //     this.tableData.totalElements = val.totalElements
+  //   } else {
+  //     this.tableData.totalPages = 0
+  //     this.tableData.totalElements = 0
+  //   }
+  //   // 搜索对应显示红色字体
+  //   var content = val && val.content
+  //   var reg = new RegExp(this.searchWord, 'gi')
+  //   if (val && content && this.searchWord) {
+  //     content.forEach(item => {
+  //       item.monomerName = item.monomerName && String(item.monomerName).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.structType = item.structType && String(item.structType).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.groundFloors = item.groundFloors && String(item.groundFloors).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.undergroundFloors = item.undergroundFloors && String(item.undergroundFloors).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.structureForm1 = item.structureForm1 && String(item.structureForm1).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       if (item.structureForm2) {
+  //         item.structureForm2 = String(item.structureForm2).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //         // item.structureForm2 = '/' + item.structureForm2
+  //       }
+  //       if (item.indicatorName) {
+  //         item.indicatorName = String(item.indicatorName).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       } else {
+  //         item.indicatorName = '未知'
+  //       }
+  //       item.monomerArea = item.monomerArea && String(item.monomerArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.groundArea = item.groundArea && String(item.groundArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //       item.undergroundArea = item.undergroundArea && String(item.undergroundArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+  //     })
+  //   }
+  // }
+}
+// }
+</script>
+
+<style lang="less" scoped>
+.res-lists {
+  font-size: 12px;
+  .proRig {
+    text-align: right;
+    color: #606266;
+    font-size: 14px;
+    > a {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      line-height: 12px;
+      font-size: 12px;
+      color: #606266;
+      text-align: center;
+    }
+  }
+  .nav-title {
+    text-align: left;
+    color: #888;
+    padding: 6px 0 6px 18px;
+    background-color: #f7f8f9;
+    border: 1px solid #eff2f9;
+    position: relative;
+    .sort-icon {
+      cursor: pointer;
+      padding-left: 20px;
+      background-repeat: no-repeat;
+      background-position: left center;
+      position: absolute;
+      top: 7px;
+      &.up {
+        background-image: url(~@/assets/img/price-up.png);
+      }
+      &.down {
+        background-image: url(~@/assets/img/price-down.png);
+      }
+      &.activeup {
+        background-image: url(~@/assets/img/asc.png);
+      }
+      &.activedown {
+        background-image: url(~@/assets/img/desc.png);
+      }
+    }
+    .sort-icon1 {
+      right: 300px;
+    }
+    .sort-icon2 {
+      right: 150px;
+    }
+    .sort-icon3 {
+      right: 20px;
+    }
+  }
+  .lists {
+    height: calc(100vh - 300px);
+    overflow: auto;
+    background-color: #fff;
+    .list {
+      padding: 20px 50px;
+      position: relative;
+      border: 1px solid #eff2f9;
+      &:hover {
+        background-color: #eff2f9;
+      }
+      .num-unit {
+        position: absolute;
+        color: #f03d3d;
+        font-size: 18px;
+        font-weight: bold;
+        .unit {
+          margin-left: 5px;
+          font-size: 12px;
+        }
+      }
+      .civil-num {
+        .num-unit;
+        right: 15%;
+        top: 110px;
+      }
+      .price {
+        .num-unit;
+        right: 15%;
+        top: 80px;
+      }
+    }
+    .a-list {
+      padding: 20px 15px 13px 15px;
+      position: relative;
+      border: 1px solid #eff2f9;
+      border-bottom: none;
+      color: #666;
+      font-size: 12px;
+      background-color: #fff;
+      &:first-child {
+        border-top: none;
+      }
+      &:last-child {
+        border-bottom: 1px solid #eff2f9;
+      }
+      .sub-lists {
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        .sub-list {
+          flex: 1;
+          display: flex;
+          flex-wrap: wrap;
+          padding: 6px 0 6px 32px;
+          > li {
+            flex: 0 0 25%;
+            line-height: 26px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+        }
+        .price-data {
+          flex: 0 0 130px;
+        }
+      }
+
+      .flag-span(@r,@g,@b) {
+        display: inline-block;
+        border: 1px solid rgb(@r, @g, @b);
+        padding: 0 3px;
+        line-height: 20px;
+        height: 20px;
+        color: rgb(@r, @g, @b);
+        background-color: rgba(@r, @g, @b, 0.1);
+        border-radius: 2px;
+        font-size: 12px;
+      }
+      .flag-cost {
+        .flag-span(237, 71, 49);
+      }
+      .flag-civil {
+        .flag-span(255, 156, 0);
+      }
+      .flag-install {
+        .flag-span(100, 183, 132);
+      }
+      .flag-steel {
+        .flag-span(56, 126, 197);
+      }
+      .text {
+        vertical-align: middle;
+      }
+      .title {
+        color: #444;
+        font-size: 16px;
+        line-height: 16px;
+      }
+      .num-unit {
+        position: absolute;
+        color: #f03d3d;
+        font-size: 18px;
+        font-weight: bold;
+        // min-width: 200px;
+        left: 90%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        .unit {
+          margin-left: 5px;
+          font-size: 12px;
+          color: #666;
+          font-weight: normal;
+        }
+      }
+      .civil-num {
+        .num-unit;
+        top: 73px;
+      }
+      .price {
+        .num-unit;
+        top: 45px;
+      }
+    }
+  }
+  .no-data {
+    text-align: center;
+    margin-top: 20px;
+    color: #888;
+  }
+  .block {
+    text-align: right;
+    padding-right: 41px;
+    background-color: #e7eaee;
+    padding-top: 10px;
+    margin-bottom: 10px;
+  }
+}
+@media screen and(max-width: 1400px) {
+  .res-lists .lists .a-list {
+    .civil-num,
+    .price {
+      left: 88%;
+    }
+  }
+}
+</style>

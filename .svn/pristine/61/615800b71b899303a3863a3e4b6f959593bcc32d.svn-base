@@ -1,0 +1,121 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <ul>
+        <li>
+          <input type="number" v-model.lazy.trim="conditionParams.value1" class="input-box">
+          ~
+          <input type="number" v-model.lazy.trim="conditionParams.value2" class="input-box">
+          {{unit}}
+        </li>
+        <li class="confirm-btn" @click="handleConfirm('buildingArea')">确定</li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    title: String
+  },
+  computed: {
+    unit() {
+      switch (this.title) {
+        case '建设规模':
+          return 'MW'
+        case '日处理量':
+          return 't'
+        case '项目规划容量':
+          return '万kVA'
+        case '年客货运量':
+          return '万吨/万人'
+        case '建筑面积':
+        case '地上建筑面积':
+        case '地下建筑面积':
+        case '大堂面积':
+        case '车站建筑面积':
+        case '车站建筑面积(主体+附属)':
+        case '车站主体建筑面积':
+        case '车站附属建筑面积':
+        case '总面积':
+        case '占地面积':
+        case '绿化面积':
+        case '商业面积':
+        case '办公面积':
+        case '住宅面积':
+          return '㎡'
+        case '地上层数':
+        case '地下层数':
+        case '层数':
+        case '车站层数':
+        case '总层数':
+          return '层'
+        case '车位数':
+          return '个'
+        case '换乘通道个数':
+        case '收费通道数量':
+        case '主跑通道数量':
+          return '条'
+        case '区间长度':
+        case '总铺轨长度':
+        case '其中正线铺轨长度':
+        case '线路长度':
+        case '区间桥梁(含高架)总长':
+        case '区间隧道总长':
+        case '桥梁长度':
+        case '桥梁宽度':
+        case '管道长度':
+        case '围墙总长':
+        case '隧道长度':
+        case '檐高(或建筑高度)':
+          return 'm'
+        case '供电电压等级':
+        case '电压等级':
+        case '送出电压等级':
+          return 'KV'
+        case '项目容量':
+        case '本期容量':
+          return 'MW'
+        case '单项工程规划容量':
+        case '本期容量': // T003电网工程
+          return '万kVA'
+        case '本期台数':
+        case '站内充电设施数量':
+          return '台'
+        case '设计生产能力':
+          return 'Mt/a'
+        case '储油总容积':
+        case '存储容量':
+        case '年运输能力':
+          return 'm³'
+        case '设计生产能力':
+          return '万吨/年'
+        case '管道直径':
+          return 'mm'
+        case '床位数':
+          return '位'
+        case '年生产能力':
+          return '桶油当量'
+        case '污水处理能力':
+          return '万吨/日'
+      }
+    }
+  },
+  data() {
+    return {
+      conditionParams: {
+        value1: '',
+        value2: ''
+      }
+    }
+  },
+  methods: {
+    handleConfirm(item) {}
+  }
+}
+</script>
+<style lang="less" scoped>
+@import '../filter-option.less';
+</style>

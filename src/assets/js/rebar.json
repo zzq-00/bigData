@@ -1,0 +1,350 @@
+{
+  "code": 0,
+  "info": "",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "name": "总钢筋",
+        "data": {
+          "valByContent": 2182.2380,
+          "value": 6546714.0880
+        },
+        "children": [
+          {
+            "id": 2,
+            "name": "地下部分钢筋",
+            "data": {
+              "valByContent": 6546.7141,
+              "value": 6546714.0880
+            },
+            "children": [
+              {
+                "id": 3,
+                "name": "基础",
+                "data": {
+                  "valByContent": 4297.2119,
+                  "value": 1289163.5710
+                },
+                "children": [
+                  {
+                    "id": 4,
+                    "name": "基础梁",
+                    "data": {
+                      "valByContent": 247.9244,
+                      "value": 74377.3260
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "name": "筏板基础",
+                    "data": {
+                      "valByContent": 3031.8055,
+                      "value": 909541.6430
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "name": "集水坑",
+                    "data": {
+                      "valByContent": 90.2950,
+                      "value": 27088.5070
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "name": "柱墩",
+                    "data": {
+                      "valByContent": 778.3769,
+                      "value": 233513.0600
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "name": "独立基础",
+                    "data": {
+                      "valByContent": 19.7043,
+                      "value": 5911.2910
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "name": "条形基础",
+                    "data": {
+                      "valByContent": 32.0731,
+                      "value": 9621.9300
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "name": "桩承台",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "name": "承台梁",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "name": "后浇带",
+                    "data": {
+                      "valByContent": 97.0327,
+                      "value": 29109.8140
+                    }
+                  }
+                ]
+              },
+              {
+                "id": 13,
+                "name": "基础以上钢筋（地下）",
+                "data": {
+                  "valByContent": 5188.6692,
+                  "value": 5188669.2480
+                },
+                "children": [
+                  {
+                    "id": 14,
+                    "name": "柱",
+                    "data": {
+                      "valByContent": 597.1292,
+                      "value": 597129.2290
+                    }
+                  },
+                  {
+                    "id": 15,
+                    "name": "暗柱/端柱",
+                    "data": {
+                      "valByContent": 59.4044,
+                      "value": 59404.4250
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "name": "墙",
+                    "data": {
+                      "valByContent": 600.6708,
+                      "value": 600670.8050
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "name": "人防门框墙",
+                    "data": {
+                      "valByContent": 88.7802,
+                      "value": 88780.2340
+                    }
+                  },
+                  {
+                    "id": 18,
+                    "name": "暗梁",
+                    "data": {
+                      "valByContent": 13.7743,
+                      "value": 13774.3190
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "name": "连梁",
+                    "data": {
+                      "valByContent": 2.6936,
+                      "value": 2693.5580
+                    }
+                  },
+                  {
+                    "id": 20,
+                    "name": "梁",
+                    "data": {
+                      "valByContent": 2307.8878,
+                      "value": 2307887.7830
+                    }
+                  },
+                  {
+                    "id": 21,
+                    "name": "现浇板",
+                    "data": {
+                      "valByContent": 1400.3869,
+                      "value": 1400386.9290
+                    }
+                  },
+                  {
+                    "id": 22,
+                    "name": "空心楼盖板",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 23,
+                    "name": "主肋梁",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 24,
+                    "name": "次肋梁",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 25,
+                    "name": "楼梯",
+                    "data": {
+                      "valByContent": 8.1833,
+                      "value": 8183.2910
+                    }
+                  },
+                  {
+                    "id": 26,
+                    "name": "后浇带",
+                    "data": {
+                      "valByContent": 103.7450,
+                      "value": 103744.9840
+                    }
+                  },
+                  {
+                    "id": 27,
+                    "name": "墙洞",
+                    "data": {
+                      "valByContent": 6.0137,
+                      "value": 6013.6910
+                    }
+                  },
+                  {
+                    "id": 28,
+                    "name": "板洞",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": 29,
+                "name": "节点等其他钢筋（地下）",
+                "data": {
+                  "valByContent": 20.5347,
+                  "value": 20534.6980
+                },
+                "children": [
+                  {
+                    "id": 30,
+                    "name": "自定义线",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 31,
+                    "name": "其它",
+                    "data": {
+                      "valByContent": 20.5347,
+                      "value": 20534.6980
+                    }
+                  }
+                ]
+              },
+              {
+                "id": 32,
+                "name": "二次结构钢筋（地下）",
+                "data": {
+                  "valByContent": 48.3466,
+                  "value": 48346.5710
+                },
+                "children": [
+                  {
+                    "id": 33,
+                    "name": "构造柱",
+                    "data": {
+                      "valByContent": 24.5924,
+                      "value": 24592.3930
+                    }
+                  },
+                  {
+                    "id": 34,
+                    "name": "砌体墙",
+                    "data": {
+                      "valByContent": 16.6467,
+                      "value": 16646.6760
+                    }
+                  },
+                  {
+                    "id": 35,
+                    "name": "砌体加筋",
+                    "data": {
+                      "valByContent": "--",
+                      "value": "--"
+                    }
+                  },
+                  {
+                    "id": 36,
+                    "name": "过梁",
+                    "data": {
+                      "valByContent": 1.7426,
+                      "value": 1742.5740
+                    }
+                  },
+                  {
+                    "id": 37,
+                    "name": "圈梁",
+                    "data": {
+                      "valByContent": 5.3649,
+                      "value": 5364.9280
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "name": "钢筋接头",
+        "data": {
+          "valByContent": 28.096,
+          "value": 84288
+        },
+        "children": [
+          {
+            "id": 39,
+            "name": "地下部分钢筋接头",
+            "data": {
+              "valByContent": 84.288,
+              "value": 84288
+            }
+          },
+          {
+            "id": 40,
+            "name": "地上部分钢筋接头",
+            "data": {
+              "valByContent": "--",
+              "value": "--"
+            }
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "name": "总钢筋（不含基础）",
+        "data": {
+          "valByContent": 1752.5168,
+          "value": 5257550.5170
+        }
+      }
+    ]
+  }
+}

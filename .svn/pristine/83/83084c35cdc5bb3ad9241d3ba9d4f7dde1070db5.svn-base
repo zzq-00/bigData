@@ -1,0 +1,932 @@
+<template>
+  <div class="dia-box">
+    <p class="titles">对比单项工程</p>
+    <div class="pro-info">
+      <el-collapse v-model="active1">
+        <el-collapse-item :title="proInfo.monomerAll.name" name="1">
+          <div class="info-box">
+            <ul>
+              <li>
+                <span>项目行业:</span>
+                <span>{{proInfo.projectCommon.industryBelong}}/{{proInfo.projectCommon.subIndustryBelong}}</span>
+              </li>
+              <li>
+                <span>编制阶段:</span>
+                <span>{{proInfo.stage}}</span>
+              </li>
+              <li>
+                <span>建设性质:</span>
+                <span>{{proInfo.projectCommon.nature}}</span>
+              </li>
+              <X001 v-if='ruleForm.projectx=="X001"||"X002"||"X003"||"X004"||"X005"||"X006"||"X009"||"X010"||"X011"||"X014"||"X015"' :info='true' :ruleForm='proInfo'></X001>
+              <li>
+                <span>单项工程分类:</span>
+                <span>{{proInfo.monomerAll.typeStr}}</span>
+              </li>
+              <li>
+                <span>结构类型:</span>
+                <span>{{proInfo.monomerAll.deitail.structureTypeName}}</span>
+              </li>
+              <li>
+                <span>有无桩基工程:</span>
+                <span>{{proInfo.monomerAll.deitail.ifZhuangji?'有':'无'}}</span>
+              </li>
+              <li>
+                <span>主体建安工程价格信息取定时间:</span>
+                <span>{{proInfo.monomerAll.selectedDate}}</span>
+              </li>
+              <t004 v-if='ruleForm.indexCode=="T004"' :info='true' :ruleForm='proInfo'></t004>
+              <t005 v-if='ruleForm.indexCode=="T005"' :info='true' :ruleForm='proInfo'></t005>
+              <t023 v-if='ruleForm.indexCode=="T023"' :info='true' :ruleForm='proInfo'></t023>
+              <t033 v-if='ruleForm.indexCode=="T033"' :info='true' :ruleForm='proInfo'></t033>
+              <t037 v-if='ruleForm.indexCode=="T037"' :info='true' :ruleForm='proInfo'></t037>
+              <t043 v-if='ruleForm.indexCode=="T043"' :info='true' :ruleForm='proInfo'></t043>
+              <t044 v-if='ruleForm.indexCode=="T044"' :info='true' :ruleForm='proInfo'></t044>
+              <t045 v-if='ruleForm.indexCode=="T045"' :info='true' :ruleForm='proInfo'></t045>
+              <t046 v-if='ruleForm.indexCode=="T046"' :info='true' :ruleForm='proInfo'></t046>
+              <t047 v-if='ruleForm.indexCode=="T047"' :info='true' :ruleForm='proInfo'></t047>
+              <t048 v-if='ruleForm.indexCode=="T048"' :info='true' :ruleForm='proInfo'></t048>
+              <t049 v-if='ruleForm.indexCode=="T049"' :info='true' :ruleForm='proInfo'></t049>
+              <t050 v-if='ruleForm.indexCode=="T050"' :info='true' :ruleForm='proInfo'></t050>
+              <t052 v-if='ruleForm.indexCode=="T052"' :info='true' :ruleForm='proInfo'></t052>
+            </ul>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </div>
+    <p class="titles">库内单项工程</p>
+    <div class="pro-info">
+      <el-collapse v-model="active2">
+        <el-collapse-item title="筛选信息" name="1">
+          <div class="screen-box">
+            <ul>
+              <li>
+                <span>项目行业:</span>
+                <el-cascader @change="selectIndustry" placeholder="请选择项目行业" v-model="ruleForm.industry" :options="industryList" :props="props"></el-cascader>
+              </li>
+              <li>
+                <span>编制阶段:</span>
+                <el-select v-model="ruleForm.stageId" multiple collapse-tags placeholder="请选择编制阶段" @change="stageChange">
+                  <el-option v-for="item in stageList" :key="item.id" :label="item.name" :value="item.id">
+                  </el-option>
+                </el-select>
+              </li>
+              <li>
+                <span>建设性质:</span>
+                <el-select v-model="ruleForm.nature" placeholder="请选择建设性质">
+                  <el-option v-for="item in ProjectNature" :key="item.id" :label="item.name" :value="item.id">
+                  </el-option>
+                </el-select>
+              </li>
+              <X001 v-if='ruleForm.projectx=="X001"||"X002"||"X003"||"X004"||"X005"||"X006"||"X009"||"X010"||"X011"||"X014"||"X015"' :tabularData='tabularData' :ruleForm='ruleForm'></X001>
+              <li>
+                <span>单项工程分类:</span>
+                <el-cascader @change="selectChange" v-model="ruleForm.proType" :options="projectTypeFrist" :props="proJectProps"></el-cascader>
+              </li>
+              <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="111.15px" class="info-from">
+                <t004 v-if='ruleForm.indexCode=="T004"' :ruleForm='ruleForm'></t004>
+                <t005 v-if='ruleForm.indexCode=="T005"' :ruleForm='ruleForm'></t005>
+                <t023 v-if='ruleForm.indexCode=="T023"' :ruleForm='ruleForm'></t023>
+                <t031 v-if='ruleForm.indexCode=="T031"' :ruleForm='ruleForm'></t031>
+                <t033 v-if='ruleForm.indexCode=="T033"' :ruleForm='ruleForm'></t033>
+                <t037 v-if='ruleForm.indexCode=="T037"' :ruleForm='ruleForm'></t037>
+                <t043 v-if='ruleForm.indexCode=="T043"' :ruleForm='ruleForm'></t043>
+                <t044 v-if='ruleForm.indexCode=="T044"' :ruleForm='ruleForm'></t044>
+                <t045 v-if='ruleForm.indexCode=="T045"' :ruleForm='ruleForm'></t045>
+                <t046 v-if='ruleForm.indexCode=="T046"' :ruleForm='ruleForm'></t046>
+                <t047 v-if='ruleForm.indexCode=="T047"' :ruleForm='ruleForm'></t047>
+                <t048 v-if='ruleForm.indexCode=="T048"' :ruleForm='ruleForm'></t048>
+                <t049 v-if='ruleForm.indexCode=="T049"' :ruleForm='ruleForm'></t049>
+                <t050 v-if='ruleForm.indexCode=="T050"' :ruleForm='ruleForm'></t050>
+                <t052 v-if='ruleForm.indexCode=="T052"' :ruleForm='ruleForm'></t052>
+              </el-form>
+            </ul>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+      <div class="screen-results">
+        <p>
+          <span>筛选结果</span>
+          <!-- 最多只能选20个 -->
+          <span>已选择{{multipleSelection.length}}/20条；当前结果{{tableData.length}}条</span>
+        </p>
+        <el-table ref="multipleTable" border height="344px" :data="tableData" tooltip-effect="dark" style="width: 100%" @selection-change="handleSelectionChange">
+          <el-table-column width="55" type="selection" :selectable='selectable' align="center">
+            <template slot="header">
+              选择
+            </template>
+          </el-table-column>
+          <el-table-column label="项目名称" width="120">
+            <template slot-scope="scope">{{ scope.row.date }}</template>
+          </el-table-column>
+          <el-table-column label="项目行业" width="120">
+            <template slot-scope="scope">{{ scope.row.date }}</template>
+          </el-table-column>
+          <el-table-column label="编制阶段" width="120">
+            <template slot-scope="scope">{{ scope.row.date }}</template>
+          </el-table-column>
+          <el-table-column label="建设性质" width="120">
+            <template slot-scope="scope">{{ scope.row.date }}</template>
+          </el-table-column>
+          <!-- 以上四个是肯定存在的 -->
+          <el-table-column v-for="item in screeningResults[ruleForm.projectx]" :key="item.label" :label="item.label" width="120">
+            <template slot-scope="scope">{{ scope.row.date }} </template>
+          </el-table-column>
+          <!-- 上边两个不确定 -->
+          <el-table-column prop="typeStr" label="单项工程分类" width="120">
+          </el-table-column>
+          <el-table-column prop="name" label="单项工程名称" width="120">
+          </el-table-column>
+          <el-table-column v-for="(item,index) in screeningResults[ruleForm.indexCode]" :key="index" :label="item.label" :prop="item.field" width="120">
+            <template slot-scope="scope">
+              <span v-if="item.field=='ifZhuangji'">
+                {{scope.row.ifZhuangji?'有':'无'}}
+              </span>
+              <span v-else>
+                {{scope.row[item.field]}}
+              </span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import placeComponent from '@/components/place'
+import {
+  areaTypeList //地区类别
+} from '@/assets/dicData/dicOption.js'
+import t001 from '@/views/compare/infoModule/t001'
+import t004 from '@/views/compare/infoModule/t004'
+import t005 from '@/views/compare/infoModule/t005'
+import t023 from '@/views/compare/infoModule/t023'
+import t031 from '@/views/compare/infoModule/t031'
+import t033 from '@/views/compare/infoModule/t033'
+import t037 from '@/views/compare/infoModule/t037'
+import t038 from '@/views/compare/infoModule/t038'
+import t043 from '@/views/compare/infoModule/t043'
+import t044 from '@/views/compare/infoModule/t044'
+import t045 from '@/views/compare/infoModule/t045'
+import t046 from '@/views/compare/infoModule/t046'
+import t047 from '@/views/compare/infoModule/t047'
+import t048 from '@/views/compare/infoModule/t048'
+import t049 from '@/views/compare/infoModule/t049'
+import t050 from '@/views/compare/infoModule/t050'
+import t051 from '@/views/compare/infoModule/t051'
+import t052 from '@/views/compare/infoModule/t052'
+import t053 from '@/views/compare/infoModule/t053'
+import t054 from '@/views/compare/infoModule/t054'
+
+import X001 from '@/views/compare/proInfoModule/X001'
+
+export default {
+  components: {
+    placeComponent,
+    t001,
+    t004,
+    t005,
+    t023,
+    t031,
+    t033,
+    t037,
+    t038,
+    t043,
+    t044,
+    t045,
+    t046,
+    t047,
+    t048,
+    t049,
+    t050,
+    t051,
+    t052,
+    t053,
+    t054,
+    X001
+  },
+  watch: {},
+  data() {
+    return {
+      active1: '1',
+      active2: '1',
+      // 单项工程信息，只用来显示，不可更改
+      proInfo: {
+        monomerAll: {
+          deitail: {
+            structureTypeName: '' //结构类型名称
+          }
+        },
+        objectX: {},
+        projectCommon: {}
+      },
+      ruleForm: {
+        projectx: 'X001',
+        indexCode: 'T043', //记得改
+        industry: '', //行业
+        province: '', //项目地点
+        regionalCategories: '', //地区类别
+        stage: [], //编制阶段
+        nature: '', //建设性质
+        proType: '', //单项工程分类
+        ifZhuangji: '', //有无桩基
+        structureType: '', //结构类型
+        selectedDate: '', //价格信息取定时间
+        monomerArea: '', //占地面积
+        groundArea: '', //地上建筑面积
+        undergroundArea: '', //地下建筑面积
+        groundFloors: '', //地上层数
+        undergroundFloors: '', //地下层数
+        style: '', //建筑风格,
+        commercialArea: '', //商业面积
+        workArea: '', //办公面积
+        buildArea: '', //建筑面积
+        floors: '', //层数
+        numberOfCars: '', //车位数
+        assemblyRate: '', //装配率
+        ifDishang: '', //是否含底层商铺
+        wallLenght: '', //围墙总长
+        bedNumber: '', //床位数
+        districtsGroundArea: '', //小区占地面积
+        afforestedArea: '', //绿化面积
+        hardAreaRatio: '', //硬景面积占比
+        totalRooms: '', //总客房数
+        lobbyArea: '', //大堂面积
+        ifSingleToilet: '', //是否位独立卫生间
+        operatingArea: '', //手术室面积 没有验证
+        outpatientArea: '', //门诊面积  没有验证
+        classSize: '', //班级人数  没有验证
+        educationalSystem: [], //学制
+        residentialArea: '', //住宅面积
+        sewageTreatment: '', //污水处理能力
+        stationNumber: '' //站内充电设施数量
+      },
+      industryList: [], //项目行业列表
+      stageList: [], //编制阶段
+      ProjectNature: [], //建设性质
+      projectTypeFrist: [], //单项工程类别
+      threeLevel: [],
+      industrySecondLevel: [], //行业二级列表
+      tabularData: {
+        regionalList: [], //省份列表
+        areaTypeList: [] //地区类别
+      },
+      rules: {
+        selectedDate: [
+          {
+            type: 'string',
+
+            message: '请选择日期',
+            trigger: 'change'
+          }
+        ],
+        //有无桩基工程
+        ifZhuangji: [{ message: '请选择桩基工程', trigger: 'change' }],
+        //结构类型
+        structureTypeId: [{ message: '请选择结构类型', trigger: 'change' }],
+        //地上建筑面积
+        groundArea: [
+          { message: '请输入地上建筑面积 ', trigger: 'blur' },
+          {
+            pattern: /^(?!-1+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //占地面积
+        monomerArea: [
+          { message: '请输入占地面积 ', trigger: 'blur' },
+          {
+            pattern: /^(?!-1+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //地下建筑面积
+        undergroundArea: [
+          { message: '请输入地下建筑面积', trigger: 'blur' },
+          {
+            pattern: /^(?!-1+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //地上层数
+        groundFloors: [{ message: '请输入地上层数', trigger: 'blur' }, { pattern: /^[0-9]\d*$/, message: '非负整数' }],
+        //地下层数
+        undergroundFloors: [{ message: '请输入地下层数', trigger: 'blur' }, { pattern: /^[0-9]\d*$/, message: '非负整数' }],
+        //商业面积
+        commercialArea: [
+          { message: '请输入商业面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //办公面积
+        workArea: [
+          { message: '请输入商业面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //建筑面积 保留2位小数
+        buildArea: [
+          { message: '请输入建筑面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //层数 非负整数
+        floors: [{ message: '请输入层数', trigger: 'blur' }, { pattern: /^[1-9]\d*$/, message: '非负整数并大于0' }],
+        //车位数
+        numberOfCars: [{ message: '请输入车位数', trigger: 'blur' }, { pattern: /^[1-9]\d*$/, message: '非负整数并大于0' }],
+        //大堂面积
+        lobbyArea: [
+          { message: '请输入大堂面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //独立卫生间
+        ifSingleToilet: [{ message: '请选择独立卫生间', trigger: 'change' }],
+        //装配率
+        assemblyRate: [
+          { message: '请输入装配率 ', trigger: 'blur' },
+          {
+            pattern: /^(?!-1+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //学制
+        educationalSystem: [{ type: 'array', message: '请至少选择一个学制', trigger: 'change' }],
+        //住宅面积
+        residentialArea: [
+          { message: '请输入住宅面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //站内充电设施数量
+        stationNumber: [
+          { message: '请输入站内充电设施数量', trigger: 'blur' },
+          { pattern: /^[1-9]\d*$/, message: '非负整数并大于0' }
+        ],
+        //充电站等级
+        stationClass: [{ message: '请选择充电站等级', trigger: 'change' }],
+        //充电桩类别
+        chargeType: [{ message: '请选择充电桩类别', trigger: 'change' }],
+        //污水处理能力
+        sewageTreatment: [
+          { message: '请输入污水处理能力', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //围墙类型
+        wallType: [{ message: '请选择围墙类型', trigger: 'change' }],
+        //围墙总长
+        wallLenght: [
+          { message: '请输入围墙总长', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //檐高(或建筑高度)
+        eavesHeight: [
+          { message: '请输入檐高(或建筑高度)', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //床位数
+        bedNumber: [{ message: '请输入床位数', trigger: 'blur' }, { pattern: /^[1-9]\d*$/, message: '非负整数并大于0' }],
+        //绿化面积
+        afforestedArea: [
+          { message: '请输入绿化面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ],
+        //小区占地面积
+        districtsGroundArea: [
+          { message: '请输入小区占地面积', trigger: 'blur' },
+          {
+            pattern: /^(?!0+(?:\.0+)?$)(?:[1-9]\d*|0)(?:\.\d{1,2})?$/,
+            message: '请输入正确的数值'
+          }
+        ]
+      },
+      props: {
+        value: 'id',
+        label: 'name',
+        lazy: true,
+        lazyLoad(node, resolve) {
+          const { level } = node
+          api.getIndustrySecondByParentId(node.value).then(res => {
+            res.data.map(item => {
+              item.leaf = level >= 1
+            })
+            resolve(res.data)
+          })
+        }
+      },
+      proJectProps: {
+        value: 'id',
+        label: 'name',
+        lazy: true,
+        lazyLoad: (node, resolve) => {
+          const { level } = node
+          let paramType
+          if (node.level == 1) {
+            paramType = 2
+          } else if (node.level == 2) {
+            paramType = 3
+          }
+          api.getProjectMonomerType(paramType, node.value).then(res => {
+            res.data.map(item => {
+              item.leaf = level >= 2
+            })
+            resolve(res.data)
+          })
+        }
+      },
+      tableData: [
+        {
+          id: 1,
+          date: '2016-05-03',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄',
+          checked: true,
+          selectedDate: '主体建安工程价格信息取定时间',
+          ifZhuangji: '有无桩基工程',
+          structureType: '结构类型',
+          monomerArea: '占地面积',
+          buildArea: '建筑面积',
+          floors: '层数'
+        },
+        {
+          id: 2,
+          date: '2016-05-03',
+          name: '王小虎',
+          address: '上海市普陀区金沙江路 1518 弄',
+          checked: true
+        },
+        { id: 3, date: '2016-05-03', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 4, date: '2016-05-03', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 5, date: '2016-05-02', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 6, date: '2016-05-04', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 7, date: '2016-05-01', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 8, date: '2016-05-08', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 9, date: '2016-05-06', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true },
+        { id: 10, date: '2016-05-07', name: '王小虎', address: '上海市普陀区金沙江路 1518 弄', checked: true }
+      ],
+      multipleSelection: [],
+      screeningResults: {
+        X001: [{ label: '项目地点', field: '' }, { label: '地区类别', field: '' }],
+        T004: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '有无桩基工程', field: 'ifZhuangji' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '建筑面积', field: 'buildArea' },
+          { label: '层数', field: 'floors' }
+        ],
+        T005: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '有无桩基工程', field: 'ifZhuangji' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '建筑面积', field: 'buildArea' },
+          { label: '层数', field: 'floors' },
+          { label: '车位数', field: 'numberOfCars' }
+        ],
+        T023: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T033: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '有无桩基工程', field: 'ifZhuangji' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '檐高', field: 'eavesHeight' }
+        ],
+        T037: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T043: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T044: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T045: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T046: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T047: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T048: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T049: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T050: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '地上建筑面积', field: 'groundArea' },
+          { label: '地下建筑面积', field: 'undergroundArea' },
+          { label: '地上层数', field: 'groundFloors' },
+          { label: '地下层数', field: 'undergroundFloors' }
+        ],
+        T052: [
+          { label: '主体建安工程价格信息取定时间', field: 'selectedDate' },
+          { label: '结构类型', field: 'structureType' },
+          { label: '占地面积', field: 'monomerArea' },
+          { label: '建筑面积', field: 'buildArea' },
+          { label: '层数', field: 'floors' }
+        ]
+      },
+      structureList: [] //结构类型列表
+    }
+  },
+  methods: {
+    // 库内单项工程详情
+    getLibraryMonomerDetail() {
+      let data = {
+        monomerId: 310,
+        pid: 30,
+        sid: 4
+      }
+      api.getLibraryMonomerDetail(data).then(res => {
+        // monomerAll:单项工程信息的 ,objectX:项目信息,projectCommon:项目信息
+        this.proInfo = res.data
+        let structure
+        structure = this.structureList.find(data => data.id == this.proInfo.monomerAll.deitail.structureTypeId)
+        this.proInfo.monomerAll.deitail.structureTypeName = structure.name
+        this.ruleForm.industry = [
+          Number(this.proInfo.projectCommon.industryBelongCode),
+          Number(this.proInfo.projectCommon.subIndustryBelongCode)
+        ] //筛选信息项目行业回显
+        let sameIndex = this.industryList.findIndex(data => data.id == this.proInfo.projectCommon.industryBelongCode)
+        api.getIndustrySecondByParentId(this.industryList[sameIndex].id).then(res => {
+          this.$set(this.industryList[sameIndex], 'children', res.data)
+        })
+        let monomerAll = {}
+        Object.assign(monomerAll, res.data.monomerAll) //为了不影响原对象
+        let deitail = monomerAll.deitail
+        delete monomerAll.deitail
+        Object.assign(this.ruleForm, monomerAll, deitail, res.data.objectX, res.data.projectCommon)
+        this.ruleForm.stageId = [res.data.monomerAll.stageId]
+        this.ruleForm.ifZhuangji = String(this.ruleForm.ifZhuangji)
+        this.ruleForm.commonProvinceCode = [this.ruleForm.provinceCode]
+      })
+    },
+    selectable(row) {
+      if (row.checked) {
+        return true
+      } else {
+        return false
+      }
+    },
+    // 表格选择超过20条不让选择
+    handleSelectionChange(val) {
+      if (val.length == 20) {
+        this.tableData.map(item => {
+          item.checked = false
+        })
+        val.map(item => {
+          let sames = this.tableData.find(data => data == item)
+          sames.checked = true
+        })
+      } else {
+        this.tableData.map(item => {
+          item.checked = true
+        })
+      }
+      this.multipleSelection = val
+    },
+    // 选择编制阶段
+    stageChange(val) {
+      if (val[val.length - 1] == '') {
+        this.ruleForm.stage = ['']
+      } else {
+        let nullIndex = this.ruleForm.stage.findIndex(data => data == '')
+        nullIndex > -1 ? this.ruleForm.stage.splice(nullIndex, 1) : ''
+      }
+    },
+    //单项工程类别
+    monomerGetMonomerTypeAll() {
+      api.monomerGetMonomerTypeAll().then(res => {
+        this.projectTypeFrist = [res.data['1'][0]]
+        this.threeLevel = res.data['3']
+      })
+    },
+    // 选择行业
+    selectIndustry(val) {
+      api.getIndustrySecondByParentId(val[0]).then(res => {
+        let sameEle = res.data.find(data => data.id == val[1])
+        this.ruleForm.projectx = sameEle ? sameEle.projectx : ''
+      })
+    },
+    // 选择单项工程分类
+    selectChange(val) {
+      let sameEle = this.threeLevel.find(data => data.id == val[val.length - 1])
+      this.ruleForm.indexCode = sameEle.indexCode
+    },
+    // 获取项目行业
+    getIndustryBelongFirst() {
+      api.getIndustryBelongFirst().then(res => {
+        res.data.map(item => {
+          item.leaf = false
+        })
+        res.data.unshift({ id: '-1', name: '不限', leaf: true })
+        this.industryList = res.data
+      })
+    },
+    // 获取省份
+    allProvinces() {
+      api.allProvinces().then(res => {
+        this.tabularData.regionalList = res.data
+      })
+    },
+    // 获取编制阶段
+    getStages() {
+      api.getStages().then(res => {
+        // res.data.unshift({ id: '', name: '不限' })
+        // this.stageList = res.data
+        // 朗越要求只显示招标控制价和结算价两个选项
+        res.data.map(item => {
+          if (item.name == '招标控制价' || item.name == '结算价') {
+            this.stageList.push(item)
+          }
+        })
+        this.stageList.unshift({ id: '', name: '不限' })
+      })
+    },
+    // 建设性质
+    getProjectNature() {
+      api.getProjectNature().then(res => {
+        res.data.unshift({ id: -1, name: '不限', for_order: null })
+        this.ProjectNature = res.data
+      })
+    }
+  },
+  mounted() {
+    api.getDicCommon(9).then(res => {
+      this.structureList = res.data
+    })
+    this.getIndustryBelongFirst() //项目行业
+    this.allProvinces() //获取省份
+    this.tabularData.areaTypeList = ['不限', ...areaTypeList]
+    this.getStages() //编制阶段
+    this.getProjectNature() //建设性质
+    this.monomerGetMonomerTypeAll() //单项工程类别
+    this.getLibraryMonomerDetail() //库内单项工程详情
+  }
+}
+</script>
+
+<style lang="less" scoped>
+.dia-box {
+  max-height: calc(80vh - 104px);
+  overflow-y: scroll;
+  .titles {
+    background: #eff1f7;
+    height: 30px;
+    line-height: 30px;
+    border-left: 3px solid #91a2e8;
+    padding-left: 17px;
+    color: #666666;
+  }
+  .pro-info {
+    padding: 14px 20px 20px 20px;
+    .info-box {
+      background: #f3f4f5;
+      margin-top: 10px;
+      padding-top: 20px;
+      ul {
+        /deep/li {
+          display: inline-block;
+          height: 29px;
+          width: 320px;
+          margin-left: 10px;
+          margin-bottom: 3px;
+          span:nth-child(1) {
+            color: #999999;
+            float: left;
+            line-height: 16px;
+            text-align: right;
+            margin-right: 17px;
+            width: 101.15px;
+          }
+          span:nth-child(2) {
+            color: #666666;
+            line-height: 16px;
+            text-align: left;
+            width: 170px;
+            float: left;
+          }
+        }
+      }
+    }
+    .screen-box {
+      background: #f3f4f5;
+      margin-top: 10px;
+      padding-top: 10px;
+      ul {
+        /deep/li {
+          display: inline-block;
+          height: 30px;
+          width: 320px;
+          margin: 0px 20px 20px 10px;
+          margin-right: 0;
+          > span:nth-child(1) {
+            display: inline-block;
+            height: 30px;
+            line-height: 30px;
+            margin-right: 10px;
+            width: 101.15px;
+            text-align: right;
+          }
+          /deep/.el-select,
+          /deep/.el-cascader {
+            width: 200px;
+            line-height: 30px;
+            .el-input__inner {
+              height: 30px;
+              line-height: 30px;
+            }
+            .el-input__icon {
+              line-height: 30px;
+            }
+          }
+        }
+        /deep/.info-from {
+          .special-item {
+            /deep/.el-form-item__label {
+              line-height: 14px;
+            }
+          }
+          .el-form-item__content {
+            line-height: 30px;
+            height: 30px;
+            width: 200px;
+          }
+          .el-input__inner {
+            height: 30px;
+            line-height: 30px;
+          }
+          .el-input__icon {
+            line-height: 30px;
+          }
+          .el-form-item__label {
+            padding: 0;
+            padding-right: 10px;
+            line-height: 30px;
+          }
+          .el-textarea {
+            width: 270px;
+            .el-textarea__inner {
+              line-height: 30px;
+              height: 30px;
+              padding: 0 10px;
+            }
+            .el-input__count {
+              bottom: 1px;
+              right: 10px;
+            }
+          }
+        }
+        .li-box {
+          display: inline-block;
+        }
+      }
+    }
+    /deep/.el-collapse {
+      border: none;
+      .el-collapse-item__arrow {
+        margin: 0 0 0 5px;
+      }
+    }
+    /deep/.el-collapse-item__header {
+      border: none;
+      height: 13px;
+      line-height: 13px;
+      font-size: 12px;
+    }
+    /deep/.el-collapse-item__wrap {
+      border: none;
+    }
+    .screen-results {
+      > p {
+        font-size: 12px;
+        height: 13px;
+        line-height: 13px;
+        margin-bottom: 10px;
+        span:nth-child(2) {
+          float: right;
+        }
+      }
+      /deep/.el-table {
+        th {
+          color: #888888;
+          background: #fafafb;
+          .el-checkbox {
+            display: none;
+          }
+        }
+        th:nth-child(1) {
+          .cell::after {
+            content: '选择';
+          }
+        }
+      }
+    }
+  }
+}
+/*修改滚动条样式*/
+.dia-box::-webkit-scrollbar {
+  width: 5px;
+  height: 10px;
+  /**/
+}
+// 滚动条的轨道
+.dia-box::-webkit-scrollbar-track {
+  background: rgb(239, 239, 239);
+  border-radius: 2px;
+}
+// 滚动条里面的小方块
+.dia-box::-webkit-scrollbar-thumb {
+  background: #bfbfbf;
+  border-radius: 10px;
+}
+</style>

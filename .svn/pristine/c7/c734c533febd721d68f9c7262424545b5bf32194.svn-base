@@ -1,0 +1,148 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <ul>
+        <li>
+          <label>
+            <span :class="{active: !selValue}" @click="select('不限')">不限</span>
+          </label>
+        </li>
+        <template v-if="noId">
+          <li v-for="(item,index) in List" :key="index">
+            <label>
+              <input type="radio" v-model="selValue" :value="item" @change="select(item)">
+              <span>{{item}}</span>
+            </label>
+          </li>
+        </template>
+        <template v-else>
+          <li v-for="(item,index) in List" :key="index">
+            <label>
+              <input type="radio" v-model="selValue" :value="item.id" @change="select(item)">
+              <span>{{item.name}}</span>
+            </label>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import { areaTypeList, trafficTypeList } from '@/assets/dicData/dicOption.js'
+import { mapMutations } from 'vuex'
+export default {
+  props: {
+    title: String
+  },
+  data() {
+    return {
+      List: [],
+      selValue: ''
+    }
+  },
+  computed: {
+    noId() {
+      return ['项目地区类别', '单选工程地区类别', '城市轨道交通类别', '有无桩基工程'].includes(this.title)
+    }
+  },
+  methods: {
+    ...mapMutations(['setSingleItemFilterData']),
+    select(item) {
+      if (item === '不限') this.selValue = ''
+      switch (this.title) {
+        case '项目地区类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              commonAreaType: this.selValue
+            },
+            dynamicTags: { commonAreaTypeSel: '项目地区类别：' + item }
+          })
+          break
+        case '单选工程地区类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              areaType: this.selValue
+            },
+            dynamicTags: { areaTypeSel: '单选工程地区类别：' + item }
+          })
+          break
+        case '城市轨道交通类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              trafficType: this.selValue
+            },
+            dynamicTags: { trafficTypeSel: item }
+          })
+          break
+        case '有无桩基工程':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              ifZhuangji: this.selValue
+            },
+            dynamicTags: { ifZhuangjiSel: item + '桩基工程' }
+          })
+          break
+        case '道床类型':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              bedType: this.selValue
+            },
+            dynamicTags: { bedTypeSel: item.name || '' }
+          })
+          break
+        case '储运介质':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              storageMedium: this.selValue
+            },
+            dynamicTags: { storageMediumSel: item.name || '' }
+          })
+          break
+        case '开采类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              miningType: this.selValue
+            },
+            dynamicTags: { miningTypeSel: item.name || '' }
+          })
+          break
+      }
+    },
+    getDicCommon(type) {
+      api.getDicCommon(type).then(res => (this.List = res.data))
+    }
+  },
+  mounted() {
+    switch (this.title) {
+      case '项目地区类别':
+      case '单选工程地区类别':
+        this.List = areaTypeList
+        break
+      case '城市轨道交通类别':
+        this.List = trafficTypeList
+        break
+      case '有无桩基工程':
+        this.List = ['有', '无']
+        break
+      case '道床类型':
+        this.List = this.getDicCommon(5)
+        break
+      case '储运介质':
+        this.List = this.getDicCommon(4)
+        break
+      case '开采类别':
+        this.List = this.getDicCommon(11)
+        break
+    }
+  },
+  destroyed() {
+    this.select('不限')
+  }
+}
+</script>
+<style lang="less" scoped>
+@import '../filter-option.less';
+</style>

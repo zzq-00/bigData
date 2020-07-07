@@ -1,0 +1,424 @@
+<template>
+  <div>
+    <headerComponent />
+    <breadcrumb :breadcrumbs="breadcrumbs" />
+    <div class="container main">
+      <!-- 筛选栏 -->
+      <projectFilterCom filterType='projectManage' placeholder="搜索项目编号 / 项目名称 / 建设单位 / 创建人 / 项目地点 / 项目途径重要节点城市" />
+      <div class="my_project">
+        <router-link class="create-project" to="/createProject/create" v-has="['pVcP9p']">创建项目</router-link>
+        <div class="another-pagination">
+          <span>共有 {{totalElements}} 条项目。</span>
+          <span v-show="totalPages">
+            <el-button type="text" icon="el-icon-arrow-left" :disabled="conditionParams.page==1" @click="conditionParams.page--"></el-button>
+            <span> {{conditionParams.page}}/{{totalPages}} </span>
+            <el-button type="text" icon="el-icon-arrow-right" :disabled="conditionParams.page==totalPages" @click="conditionParams.page++"></el-button>
+          </span>
+        </div>
+      </div>
+
+      <div class="project-tables">
+        <el-table style="width: 100%;" height="calc(100vh - 280px)" :data="tableData" stripe border size="mini" @sort-change="sortChange" @row-click='rowClick'>
+          <el-table-column label="序号" align="center" width="60px">
+            <template slot-scope="scope">
+              {{scope.$index+1+(conditionParams.page-1)*conditionParams.size}}
+            </template>
+          </el-table-column>
+          <el-table-column label="项目编号" width="120px">
+            <template slot-scope="scope">
+              <div v-html="scope.row.projectCode"></div>
+            </template>
+          </el-table-column>
+          <el-table-column label="项目名称" min-width="300px">
+            <template slot-scope="scope">
+              <span v-html="scope.row.projectName"></span>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建人" width="100px">
+            <div slot-scope="scope" style="display: flex;justify-content: space-between;">
+              <span v-html="scope.row.creatorName"></span>
+              <el-popover placement="right" width="100" trigger="hover" @show="getMembersByPid(scope.row)">
+                <dl class="member-list">
+                  <dt>项目成员列表</dt>
+                  <dd v-for="(item,index) in scope.row.member" :key="index">{{item}}</dd>
+                </dl>
+                <img src="@/assets/img/member.png" slot="reference" alt="">
+              </el-popover>
+            </div>
+          </el-table-column>
+          <el-table-column label="创建时间" sortable="custom" prop="create_at" width="160px">
+            <template slot-scope="scope">
+              {{scope.row.createAt}}
+            </template>
+          </el-table-column>
+          <el-table-column label="项目地点/项目途径重要节点城市" min-width="220px">
+            <template slot-scope="scope">
+              <span v-if="scope.row.importantCities" v-html="scope.row.importantCities"></span>
+              <template v-else>
+                <span v-html="scope.row.provinceName"></span>
+                - <span v-html="scope.row.cityName"></span>
+                - <span v-html="scope.row.distinctName"></span>
+              </template>
+            </template>
+          </el-table-column>
+          <el-table-column label="建设单位" min-width="230px">
+            <template slot-scope="scope">
+              <div v-html="scope.row.doSide"></div>
+            </template>
+          </el-table-column>
+          <el-table-column label="项目行业" width="200px">
+            <template slot-scope="scope">
+              {{scope.row.industryBelong}} / {{scope.row.subIndustryBelong}}
+            </template>
+          </el-table-column>
+          <el-table-column label="编制阶段" prop="stage" min-width="250px">
+          </el-table-column>
+          <el-table-column label="分享状态" width="80px" fixed="right">
+            <template slot-scope="scope">
+              <span class="click-alone" @click.stop="projectSharing(scope.row)">{{scope.row.share?'重新分享':'分享'}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="指标分析" width="160px" fixed="right">
+            <template slot-scope="scope">
+              <el-tooltip v-if="scope.row.hasAnalysed==-1" effect="dark" :content="permissionanalysis ? '目前无可分析数据' : '您没有该功能的权限'" placement="left">
+                <span class="click-alone disabled" @click.stop="analysisData(scope.row)">分析</span>
+              </el-tooltip>
+              <!-- -1 不可分析*文件汇总出错  0 不可分析*文件不可分析 -->
+              <span class="click-alone" @click.stop="analysisData(scope.row)" v-else-if="scope.row.hasAnalysed!=0 && permissionanalysis">分析</span>
+              <span class="click-alone" @click.stop="gotoDetails(scope.row)" v-if="scope.row.canLook && permissionlookProject">查看</span>
+              <span class="click-alone" @click.stop="gotoRecord(scope.row)" v-if="scope.row.hasAnalysed!=-1">分析记录</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="指标对比" min-width="145px" fixed="right">
+            <template slot-scope="scope">
+              <span class="click-alone" @click.stop="compare(scope.row)">指标对比</span>
+              <span class="click-alone" @click.stop="viewRecord(scope.row)">查看记录</span>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="pagination-wrap" v-show="tableData.length">
+          <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="conditionParams.page" :page-sizes="[10, 20, 50, 100]" :page-size.sync="conditionParams.size" layout="sizes, prev, pager, next, jumper" :total="totalElements">
+          </el-pagination>
+        </div>
+      </div>
+    </div>
+    <!-- 判断权限 没有权限改变颜色 -->
+    <span class="J-lookProject" v-has="['30tPRo']"></span>
+    <span class="J-analysis" v-has="['70bb3J']"></span>
+    <span class="J-index" v-has="['gi1q6y']"></span>
+  </div>
+</template>
+
+<script>
+import headerComponent from '@/components/headerComponent'
+import breadcrumb from '@/components/breadcrumb'
+import projectFilterCom from '@/components/projectFilterCom'
+import api from '@/fetch/api'
+import { isDisplay } from '@/assets/js/Utils'
+import { mapState } from 'vuex'
+
+export default {
+  name: 'projectManage',
+  components: {
+    headerComponent,
+    breadcrumb,
+    projectFilterCom
+  },
+  computed: {
+    ...mapState(['projectManageFilterData'])
+  },
+  data() {
+    return {
+      permissionlookProject: false,
+      permissionanalysis: false,
+      permissionindex: false,
+      breadcrumbs: [{ name: '我的项目', path: this.$route.fullPath }],
+      conditionParams: {
+        fromWhere: 1, // 1.大数据平台 2.质检运管
+        column: 'create_at',
+        descOrAsc: true,
+        page: 1,
+        size: 20
+      },
+      totalElements: 0,
+      totalPages: 0,
+      tableData: [],
+      directoryList: []
+    }
+  },
+  watch: {
+    projectManageFilterData: {
+      handler: function(value) {
+        this.conditionParams.page = 1
+        Object.assign(this.conditionParams, value)
+        for (const key in this.conditionParams) {
+          if (this.conditionParams[key] == '' || this.conditionParams[key] == '不限') delete this.conditionParams[key]
+        }
+        this.getProjectByCondition()
+      },
+      deep: true
+    }
+  },
+  methods: {
+    sortChange({ column, prop, order }) {
+      this.conditionParams.page = 1
+      this.conditionParams.column = prop
+      switch (order) {
+        case 'descending':
+          this.conditionParams.descOrAsc = true
+          break
+        case 'ascending':
+          this.conditionParams.descOrAsc = false
+          break
+        default:
+          this.conditionParams.descOrAsc = null
+      }
+      this.getProjectByCondition()
+    },
+    // 翻页
+    handleCurrentChange(val) {
+      this.conditionParams.page = val
+      this.getProjectByCondition()
+    },
+    // 改变每页项目数量
+    handleSizeChange(val) {
+      this.conditionParams.page = 1
+      this.conditionParams.size = val
+      this.getProjectByCondition()
+    },
+    // 根据条件查询项目
+    getProjectByCondition() {
+      api.getProjectByCondition(this.conditionParams).then(res => {
+        this.tableData = res.data.content
+        this.totalElements = res.data.totalElements
+        this.totalPages = res.data.totalPages
+        if (this.tableData && this.conditionParams.searchBoxKeyWord) {
+          let searchText = this.conditionParams.searchBoxKeyWord
+          let temp = searchText
+            .replace('\\', '\\\\')
+            .replace('*', '\\*')
+            .replace('+', '\\+')
+            .replace('|', '\\|')
+            .replace('{', '\\{')
+            .replace('}', '\\}')
+            .replace('(', '\\(')
+            .replace(')', '\\)')
+            .replace('^', '\\^')
+            .replace('$', '\\$')
+            .replace('[', '\\[')
+            .replace(']', '\\]')
+            .replace('?', '\\?')
+            .replace(',', '\\,')
+            .replace('.', '\\.')
+            .replace('&', '\\&')
+          let replaceReg = new RegExp(temp, 'g')
+          let replaceString = '<span style="color: red;font-weight:bold;">' + searchText + '</span>'
+          this.tableData.forEach((item, index) => {
+            this.tableData[index].projectCode = item.projectCode.replace(replaceReg, replaceString)
+            this.tableData[index].projectName = item.projectName.replace(replaceReg, replaceString)
+            this.tableData[index].doSide = item.doSide.replace(replaceReg, replaceString)
+            this.tableData[index].creatorName = item.creatorName.replace(replaceReg, replaceString)
+            this.tableData[index].provinceName = item.provinceName.replace(replaceReg, replaceString)
+            this.tableData[index].cityName = item.cityName.replace(replaceReg, replaceString)
+            this.tableData[index].distinctName = item.distinctName.replace(replaceReg, replaceString)
+            this.tableData[index].importantCities = item.importantCities.replace(replaceReg, replaceString)
+          })
+        }
+      })
+    },
+    // 指标分析查看
+    gotoDetails(row) {
+      // 指标目录
+      api.sidebarDirectory(row.id).then(res => {
+        if (!res.data.length) return this.$message.warning('暂无指标数据')
+        this.directoryList = res.data
+        let arr = []
+        this.directoryList.map(item => {
+          if (item.indicatorName) {
+            item.indicatorName.map(items => {
+              if (items.indicatorName == '造价指标') {
+                arr.push(items.indicatorName)
+              }
+            })
+          }
+        })
+        for (let i = 0; i < this.directoryList.length; i++) {
+          const one = this.directoryList[i]
+          for (let a = 0; a < one.indicatorName.length; a++) {
+            const two = one.indicatorName[a]
+            if (arr.length > 0) {
+              if (two.indicatorName == '造价指标') {
+                if (two.projectIndex.length > 0) {
+                  let proIndex = two.projectIndex.findIndex(data => data.projectIndexNmae == '项目指标')
+                  if (proIndex || proIndex == 0) {
+                    let stageId = two.projectIndex[proIndex].stageId
+                    this.$router.push(`/projectManage/detail/newIndexData/proIndex/${row.id}/${stageId}`)
+                  } else {
+                    break
+                  }
+                }
+              } else {
+                continue
+              }
+            } else {
+              this.$router.push(
+                `/projectManage/detail/newIndexData/operandIndex/${row.id}/${this.directoryList[0].indicatorName[0].monomerMessage[0].buildingId}`
+              )
+            }
+          }
+        }
+      })
+    },
+    // 分析记录查看
+    gotoRecord(row) {
+      this.$router.push('/indexAnalysis/record/' + row.id)
+    },
+    // 获取项目成员
+    getMembersByPid(row) {
+      api.getMembersByPid(row.id).then(res => {
+        let member = res.data.map(item => item.name)
+        this.$set(row, 'member', member)
+      })
+    },
+    // 整行点击进入项目详情
+    rowClick({ id }, column, event) {
+      this.$router.push(`/projectManage/detail/projectInfo/${id}`)
+      // 避免整行点击与后方操作按钮冲突
+      // let click-alone = new RegExp('click-alone').test(event.target.className)
+      // if (!click-alone && this.permissionlookProject) {
+      // }
+    },
+    compare(data) {
+      window.open(`/compare/index/selectStage/${data.id}/${data.projectName}`)
+    },
+    // 查看指标对比记录
+    viewRecord(data) {
+      window.open(`/compare/comparativeRecord/${data.id}`)
+    },
+    // 分析
+    analysisData({ id, hasAnalysed }) {
+      if (hasAnalysed === -1) {
+        this.$confirm('项目不包含可用于分析的文件，请先上传', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+          .then(() => {
+            window.open(`/projectManage/detail/fileInfo/${id}`, '_blank')
+          })
+          .catch(() => {})
+      } else {
+        window.open(`/indexAnalysis/index/selectFile/${id}`, '_blank')
+      }
+    },
+    // 分享
+    projectSharing({ id, share }) {
+      this.$confirm('确定分享此项目？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          api.projectSharing(id).then(res => {
+            this.$message({ showClose: true, type: 'success', message: '项目分享成功' })
+            this.getProjectByCondition()
+          })
+        })
+        .catch(() => {})
+    }
+  },
+  mounted() {   
+    isDisplay(this, 'J-lookProject', 'permissionlookProject')
+    isDisplay(this, 'J-analysis', 'permissionanalysis')
+    isDisplay(this, 'J-index', 'permissionindex')
+  },
+  activated() {
+    this.getProjectByCondition()
+  }
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="less">
+.container {
+  box-sizing: border-box;
+  &.main {
+    padding: 15px 0;
+    min-height: e('calc(100vh - 90px)');
+  }
+}
+.my_project {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 5px 0;
+  .create-project {
+    display: inline-block;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 27px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: #fff;
+    background-color: #4574d0;
+    text-align: center;
+    background-image: url(~@/assets/img/add.png);
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    &:hover {
+      background-color: rgb(106, 144, 217);
+    }
+  }
+  .another-pagination {
+    > span:last-child {
+      margin: 0 10px;
+    }
+    > b {
+      margin: 0 20px;
+      font-size: 14px;
+    }
+  }
+}
+.pagination-wrap {
+  text-align: right;
+  margin-top: 10px;
+  margin-right: 40px;
+}
+.click-alone {
+  display: inline-block;
+  color: #69789e;
+  height: 100%;
+  &.disabled {
+    cursor: not-allowed;
+    color: #bebebe;
+  }
+  & + .click-alone::before {
+    content: '';
+    display: inline-block;
+    height: 9px;
+    width: 1px;
+    background-color: #dfdfdf;
+    margin: 0 6px;
+  }
+}
+.member-list {
+  line-height: 30px;
+  > dt {
+    border-bottom: 1px solid #ddd;
+    margin: -10px -12px 0;
+    padding: 0 12px;
+  }
+  > dd:nth-child(2) {
+    margin-top: 5px;
+  }
+}
+.project-tables {
+  /deep/ .el-table__row {
+    cursor: pointer;
+  }
+  /deep/ .el-table th {
+    padding: 0;
+  }
+}
+</style>

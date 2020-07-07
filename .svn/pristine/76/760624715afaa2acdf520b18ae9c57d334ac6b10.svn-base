@@ -1,0 +1,220 @@
+{
+  "code": 200,
+  "info": "操作成功",
+  "data": {
+    "params": {
+      "projectId": 22,
+      "stage": 4,
+      "type1": 0,
+      "type2": 0,
+      "type3": 3,
+      "monomers": [
+        {
+          "id": 1,
+          "name": "123"
+        },
+        {
+          "id": 9,
+          "name": "indexSummary-test"
+        }
+      ]
+    },
+    "总指标": [
+      {
+        "id": 1,
+        "index": "1",
+        "name": "分部分项及单价措施项目",
+        "result-1": 1,
+        "costByArea-1": 9159.26,
+        "costPercent-1": 0.85,
+        "result-9": 1,
+        "costByArea-9": 7159.26,
+        "costPercent-9": 0.85,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 2,
+        "index": "1.1",
+        "name": "建筑工程",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 3,
+        "index": "1.2",
+        "name": "装饰工程",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 4,
+        "index": "1.3",
+        "name": "安装工程",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 5,
+        "index": "1.4.1",
+        "name": "建筑装饰单价措施项目",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 6,
+        "index": "1.4.2",
+        "name": "安装单价措施项目",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 7,
+        "index": "1.5",
+        "name": "其他清单子目",
+        "result-1": 2,
+        "costByArea-1": "--",
+        "costPercent-1": "--",
+        "result-9": 2,
+        "costByArea-9": "--",
+        "costPercent-9": "--",
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 8,
+        "index": "2",
+        "name": "总价措施项目",
+        "result-1": 0,
+        "costByArea-1": 1612.54,
+        "costPercent-1": 0.15,
+        "result-9": 0,
+        "costByArea-9": 1612.54,
+        "costPercent-9": 0.15,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 9,
+        "index": "3",
+        "name": "其他项目",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 10,
+        "index": "3.1",
+        "name": "暂列金额（不计入其他项目费）",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 11,
+        "index": "3.2",
+        "name": "专业工程暂估价（不计入其他项目费）",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 12,
+        "index": "3.3",
+        "name": "计日工费用",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 13,
+        "index": "3.4",
+        "name": "总承包服务费",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 14,
+        "index": "4",
+        "name": "规费",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      },
+      {
+        "id": 15,
+        "index": "5",
+        "name": "税金",
+        "result-1": 0,
+        "costByArea-1": 0.00,
+        "costPercent-1": 0.00,
+        "result-9": 0,
+        "costByArea-9": 0.00,
+        "costPercent-9": 0.00,
+        "source-1": "xxxx.GBQ5/xxx2.GBQ5/xxx6.GBQ5",
+        "source-9": "xxxx.GGJ/0025.GGJ/8361.GGJ"
+      }
+    ]
+  }
+}

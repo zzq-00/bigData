@@ -1,0 +1,596 @@
+<template>
+  <div class="filter-com">
+    <div class="search-bar">
+      <input type="text" :placeholder="placeholder" v-model.lazy.trim="conditionParams.searchBoxKeyWord" @change="handleConfirm">
+      <button @click="handleConfirm">搜索</button>
+    </div>
+    <div class="switch-btn">
+      <span @click="filterStatus = !filterStatus" :class="{'active':filterStatus}">{{filterStatus?'收起过滤':'过滤查询'}}</span>
+    </div>
+    <el-collapse-transition>
+      <div class="filter-option" v-show="filterStatus">
+        <!-- 项目行业 -->
+        <div v-if="showORhide('industryBelong')">
+          <span>项目行业：</span>
+          <div>
+            <ul>
+              <li v-for="(item,index) in IndustryBelongFirst" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.industryBelongCode" :value="item.id" @change="IndustryBelongFirstSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+            <ul v-show="IndustryBelongSecond.length">
+              <li v-for="(item,index) in IndustryBelongSecond" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.industryBelongSecondCode" :value="item.id" @change="industryBelongSecondSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- 项目地点 -->
+        <div v-if="showORhide('address')">
+          <span>项目地点：</span>
+          <div>
+            <!-- 省 -->
+            <ul>
+              <li v-for="(item, index) in allProvince" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.provinceCode" :value="item.code" @change="provinceSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+            <!-- 市 -->
+            <ul v-show="allCity.length">
+              <li v-for="(item, index) in allCity" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.cityCode" :value="item.code" @change="citySel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+            <!-- 区县 -->
+            <ul v-show="allDistrict.length">
+              <li v-for="(item, index) in allDistrict" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.distinctCode" :value="item.code" @change="districtSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- 地区类别 -->
+        <div v-if="showORhide('areaType')">
+          <span>地区类别：</span>
+          <div>
+            <ul>
+              <li v-for="(item,index) in areaTypeList" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.areaType" :value="item" @change="areaTypeSel(item)">
+                  <span>{{item}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- 建设性质 -->
+        <div v-if="showORhide('projectNature')">
+          <span>建设性质：</span>
+          <div>
+            <ul>
+              <li v-for="(item,index) in ProjectNature" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.nature" :value="item.id" @change="projectNatureSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- 开工日期 -->
+        <div v-if="showORhide('projectStart')">
+          <span>开工日期：</span>
+          <div>
+            <ul>
+              <li>
+                <el-date-picker v-model="dateStart" size="mini" type="daterange" value-format="yyyy-MM-dd" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+              </li>
+              <li class="confirm-btn" @click="handleConfirm('dateStart')">确定</li>
+            </ul>
+          </div>
+        </div>
+        <!-- 竣工日期 -->
+        <div v-if="showORhide('projectEnd')">
+          <span>竣工日期：</span>
+          <div>
+            <ul>
+              <li>
+                <el-date-picker v-model="dateEnd" size="mini" type="daterange" value-format="yyyy-MM-dd" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+              </li>
+              <li class="confirm-btn" @click="handleConfirm('dateEnd')">确定</li>
+            </ul>
+          </div>
+        </div>
+        <!-- 规划建筑面积 -->
+        <div v-if="showORhide('buildingArea')">
+          <span>建筑规划面积：</span>
+          <div>
+            <ul>
+              <li>
+                <input type="number" v-model.lazy.trim="conditionParams.buildingArea1" class="input-box">
+                ~
+                <input type="number" v-model.lazy.trim="conditionParams.buildingArea2" class="input-box">
+              </li>
+              <li class="confirm-btn" @click="handleConfirm('buildingArea')">确定</li>
+            </ul>
+          </div>
+        </div>
+        <!-- 编制阶段 -->
+        <div v-if="showORhide('stage')">
+          <span>编制阶段：</span>
+          <div>
+            <ul>
+              <li v-for="(item,index) in stageList" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.stage" :value="item.id" @change="stageSel(item)">
+                  <span>{{item.name}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- 指标数据 -->
+        <div v-if="showORhide('indicatorData')">
+          <span>指标数据：</span>
+          <div>
+            <ul>
+              <li v-for="(item,index) in indicatorDataList" :key="index">
+                <label>
+                  <input type="radio" v-model="conditionParams.indicatorData" :value="item" @change="indicatorDataSel(item)">
+                  <span>{{item}}</span>
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </el-collapse-transition>
+    <!-- 都是因为要搞个下面这个玩意，才这么low，这么麻烦 -->
+    <div class="all-result" v-show="Object.values(dynamicTags).some(val => val !== '')">
+      <span>全部结果：</span>
+      <span class="clear-all" @click="closeAll">清空所有</span>
+      <el-tag :key="key" v-for="(tag, key) in dynamicTags" closable @close="handleClose(key)" v-show="tag">
+        {{tag}}
+      </el-tag>
+    </div>
+  </div>
+</template>
+<script>
+import api from '@/fetch/api'
+import { mapMutations } from 'vuex'
+import { areaTypeList } from '@/assets/dicData/dicOption.js'
+
+export default {
+  props: {
+    filterType: String, // projectManage（我的项目） 或者 projectLibrary（企业项目库）
+    placeholder: ''
+  },
+  data() {
+    return {
+      projectManage: ['address', 'industryBelong', 'stage'],
+      projectLibrary: ['industryBelong', 'projectNature', 'projectStart', 'projectEnd', 'stage', 'indicatorData'],
+      dateStart: [],
+      dateEnd: [],
+      filterStatus: false,
+      allProvince: [],
+      allCity: [],
+      allDistrict: [],
+      IndustryBelongFirst: [], // 项目行业
+      IndustryBelongSecond: [], // 项目行业二级
+      stageList: [], // 项目类别
+      ProjectNature: [], // 建设性质
+      areaTypeList: ['不限', ...areaTypeList], // 地区类别
+      indicatorDataList: ['不限', '算量指标', '造价指标'], // 地区类别
+      provinceName: '',
+      cityName: '',
+      industryBelongFirstName: '',
+      dynamicTags: {
+        industryBelongSel: '', // 项目行业选择
+        addressSel: '', // 项目地点选择
+        areaTypeSel: '', // 地区类别选择
+        projectNatureSel: '', // 建设性质选择
+        projectStartSel: '', // 开工日期选择
+        projectEndSel: '', // 竣工日期选择
+        buildingAreaSel: '', // 规划建筑面积选择
+        stageSel: '', // 编制阶段选择
+        indicatorDataSel: '' // 编制阶段选择
+      },
+      conditionParams: {
+        areaType: '不限',
+        buildingArea1: '', // 规划建筑面积
+        buildingArea2: '', // 规划建筑面积
+        cityCode: '', // 市
+        distinctCode: '', // 区
+        doSide: '', // 建设单位
+        flag: '',
+        indicatorData: '不限',
+        industryBelongCode: '', // 项目行业
+        industryBelongSecondCode: '', // 项目行业二级
+        nature: '', // 建设性质
+        projectEnd1: '', // 竣工日期
+        projectEnd2: '', // 竣工日期
+        projectStart1: '', // 开工日期
+        projectStart2: '', // 开工日期
+        provinceCode: '', // 省
+        searchBoxKeyWord: '', // 搜索框
+        stage: '' // 编制阶段
+      }
+    }
+  },
+  watch: {
+    conditionParams: {
+      handler: function(value) {
+        this.setFilterData({ type: this.filterType, value })
+      },
+      deep: true
+    }
+  },
+  methods: {
+    ...mapMutations(['setFilterData']),
+    showORhide(param) {
+      // 'industryBelong', 'projectNature', 'projectStart', 'projectEnd', 'stage','address', 'areaType', 'buildingArea'
+      // 企业项目库查询要传flag，根据flag不同，页面不同
+      if (this.conditionParams.flag == 'X001' || this.conditionParams.flag == 'X002') {
+        return [...this.projectLibrary, 'address', 'areaType', 'buildingArea'].includes(param)
+      } else if (this.conditionParams.flag == 'X014') {
+        return [...this.projectLibrary, 'address', 'areaType'].includes(param)
+      }
+      return this.$data[this.filterType].includes(param)
+    },
+    // 全部结果的标记
+    handleClose(key) {
+      switch (key) {
+        case 'industryBelongSel':
+          this.conditionParams.industryBelongCode = ''
+          this.IndustryBelongFirstSel({ id: '', name: '不限' })
+          break
+        case 'addressSel':
+          this.conditionParams.provinceCode = ''
+          this.provinceSel({ id: '', name: '不限' })
+          break
+        case 'areaTypeSel':
+          this.conditionParams.areaType = ''
+          this.areaTypeSel('不限')
+          break
+        case 'projectNatureSel':
+          this.conditionParams.nature = ''
+          this.projectNatureSel({ id: '', name: '不限' })
+          break
+        case 'projectStartSel':
+          this.dateStart = []
+          this.handleConfirm('dateStart')
+          break
+        case 'projectEndSel':
+          this.dateEnd = []
+          this.handleConfirm('dateEnd')
+          break
+        case 'buildingAreaSel':
+          this.conditionParams.buildingArea1 = ''
+          this.conditionParams.buildingArea2 = ''
+          this.handleConfirm('buildingArea')
+          break
+        case 'stageSel':
+          this.conditionParams.stage = ''
+          this.stageSel({ id: '', name: '不限' })
+          break
+        case 'indicatorDataSel':
+          this.conditionParams.indicatorData = ''
+          this.indicatorDataSel('不限')
+          break
+      }
+    },
+    // 关闭
+    closeAll() {
+      this.handleClose('industryBelongSel')
+      this.handleClose('projectNatureSel')
+      this.handleClose('projectStartSel')
+      this.handleClose('projectEndSel')
+      this.handleClose('stageSel')
+      this.handleClose('indicatorDataSel')
+    },
+    // 搜索 占地面积 规划建筑面积
+    handleConfirm(type) {
+      if (type === 'dateStart') {
+        this.conditionParams.projectStart1 = this.dateStart.length < 2 ? '' : this.dateStart[0]
+        this.conditionParams.projectStart2 = this.dateStart.length < 2 ? '' : this.dateStart[1]
+        this.dynamicTags.projectStartSel = this.dateStart.length < 2 ? '' : `开工日期：${this.dateStart[0]} - ${this.dateStart[1]}`
+      } else if (type === 'dateEnd') {
+        this.conditionParams.projectEnd1 = this.dateEnd.length < 2 ? '' : this.dateEnd[0]
+        this.conditionParams.projectEnd2 = this.dateEnd.length < 2 ? '' : this.dateEnd[1]
+        this.dynamicTags.projectEndSel = this.dateEnd.length < 2 ? '' : `竣工日期：${this.dateEnd[0]} - ${this.dateEnd[1]}`
+      } else if (type === 'buildingArea') {
+        if (this.conditionParams.buildingArea1 === '' && this.conditionParams.buildingArea2 === '') {
+          this.dynamicTags.buildingAreaSel = ''
+        } else {
+          this.dynamicTags.buildingAreaSel = `规划建筑面积：${this.conditionParams.buildingArea1} - ${this.conditionParams.buildingArea2}`
+        }
+        this.setFilterData({ type: this.filterType, value: this.conditionParams })
+      } else {
+        // 搜索框
+        this.setFilterData({ type: this.filterType, value: this.conditionParams })
+      }
+    },
+
+    // 获取省份
+    allProvinces() {
+      api.allProvinces().then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allProvince = res.data
+      })
+    },
+    // 选择省份
+    provinceSel(item) {
+      this.dynamicTags.addressSel = this.provinceName = item.name === '不限' ? '' : item.name
+      // 省份改变时，市为不限 区清空
+      this.conditionParams.cityCode = ''
+      this.conditionParams.distinctCode = ''
+      this.allDistrict = []
+      // 当省份选择不限时，清空市
+      if (!item.code) return (this.allCity = [])
+      this.citiesOfProvince(item.code)
+    },
+
+    // 获取市
+    citiesOfProvince(code) {
+      api.citiesOfProvince(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allCity = res.data
+      })
+    },
+    // 选择市
+    citySel(item) {
+      this.cityName = item.name === '不限' ? '' : item.name
+      this.conditionParams.distinctCode = ''
+      // 当市为不限时，区清空
+      if (!item.code) {
+        this.allDistrict = []
+        this.dynamicTags.addressSel = this.provinceName
+      } else {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+        this.getDistrictByParentCode(item.code)
+      }
+    },
+
+    // 获取区县
+    getDistrictByParentCode(code) {
+      api.getDistrictByParentCode(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allDistrict = res.data
+      })
+    },
+    // 选择区县
+    districtSel(item) {
+      if (!item.code) {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+      } else {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName + '-' + item.name
+      }
+    },
+
+    // 获取项目行业
+    getIndustryBelongFirst() {
+      api.getIndustryBelongFirst().then(res => {
+        res.data.unshift({ id: '', name: '不限' })
+        this.IndustryBelongFirst = res.data
+      })
+    },
+    // 选择项目行业
+    IndustryBelongFirstSel(item) {
+      this.dynamicTags.industryBelongSel = this.industryBelongFirstName = item.name === '不限' ? '' : item.name
+      this.conditionParams.industryBelongSecondCode = ''
+      // 当项目行业一级为不限时，清空二级
+      if (!item.id) {
+        this.IndustryBelongSecond = []
+      } else {
+        this.getIndustrySecondByParentId(item.id)
+      }
+      this.industryBelongSecondSel({ id: '', name: '不限', projectx: '' })
+    },
+
+    // 获取项目行业二级
+    getIndustrySecondByParentId(id) {
+      api.getIndustrySecondByParentId(id).then(res => {
+        res.data.length && res.data.unshift({ id: '', name: '不限', projectx: '' })
+        this.IndustryBelongSecond = res.data
+      })
+    },
+    // 选择项目行业二级
+    industryBelongSecondSel(item) {
+      // 先清空根据projectx出现的筛选条件
+      this.handleClose('addressSel')
+      this.handleClose('areaTypeSel')
+      this.handleClose('buildingAreaSel')
+      this.filterType === 'projectLibrary' && (this.conditionParams.flag = item.projectx)
+      if (!item.id) {
+        this.dynamicTags.industryBelongSel = this.industryBelongFirstName
+      } else {
+        this.dynamicTags.industryBelongSel = this.industryBelongFirstName + '-' + item.name
+      }
+    },
+
+    // 获取建设性质
+    getProjectNature() {
+      api.getProjectNature().then(res => {
+        res.data.unshift({ id: '', name: '不限' })
+        this.ProjectNature = res.data
+      })
+    },
+    // 选择建设性质
+    projectNatureSel(item) {
+      this.dynamicTags.projectNatureSel = item.name === '不限' ? '' : item.name
+    },
+
+    // 获取编制阶段
+    getStages() {
+      api.getStages().then(res => {
+        res.data.unshift({ id: '', name: '不限' })
+        this.stageList = res.data
+      })
+    },
+    // 选择编制阶段
+    stageSel(item) {
+      this.dynamicTags.stageSel = item.name == '不限' ? '' : item.name
+    },
+    // 选择地区类别
+    areaTypeSel(item) {
+      this.dynamicTags.areaTypeSel = item == '不限' ? '' : item
+    },
+    // 选择指标数据
+    indicatorDataSel(item) {
+      this.dynamicTags.indicatorDataSel = item == '不限' ? '' : item
+    }
+  },
+  mounted() {
+    this.allProvinces()
+    this.getIndustryBelongFirst()
+    this.getStages()
+    this.getProjectNature()
+  }
+}
+</script>
+<style lang="less" scoped>
+.filter-com {
+  input[type='radio'] {
+    display: none;
+  }
+  .input-box {
+    width: 146.5px;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #dcdfe6;
+    color: #606266;
+  }
+  .search-bar {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    input {
+      font-size: 12px;
+      width: 559px;
+      height: 100%;
+      box-sizing: border-box;
+      border: 1px solid #d8e0f5;
+      padding-left: 12px;
+      &::placeholder {
+        color: #bebebe;
+      }
+    }
+    button {
+      cursor: pointer;
+      font-size: 14px;
+      width: 70px;
+      height: 100%;
+      box-sizing: border-box;
+      color: #fff;
+      background: url(~@/assets/img/searchPic.png) #ffa21d no-repeat 9px center;
+      margin-left: 6px;
+      padding-left: 20px;
+    }
+  }
+  .switch-btn {
+    color: #666666;
+    font-size: 14px;
+    height: 36px;
+    line-height: 36px;
+    > span {
+      cursor: pointer;
+      padding-right: 18px;
+      background: url('~@/assets/img/Retract.png') right no-repeat;
+      &.active {
+        background-image: url('~@/assets/img/Open.png');
+      }
+    }
+  }
+  .filter-option {
+    font-size: 12px;
+    color: #606266;
+    background-color: #f7f8f9;
+    .confirm-btn {
+      cursor: pointer;
+      width: 40px;
+      height: 26px;
+      line-height: 26px;
+      color: #606266;
+      background-color: #eee;
+      border: 1px solid #e3e2e2;
+      text-align: center;
+      margin-left: 10px;
+    }
+    > div {
+      padding: 5px 15px;
+      display: flex;
+      & + div {
+        border-top: 1px solid #eff2f9;
+      }
+      > span:first-child {
+        color: #bebebe;
+        margin-top: 7px;
+        flex: 0 0 90px;
+      }
+      > div {
+        flex: 1;
+        > ul {
+          overflow: hidden;
+          & + ul {
+            margin-top: 5px;
+          }
+          > li {
+            float: left;
+            > label {
+              > span {
+                cursor: pointer;
+                display: inline-block;
+                padding: 7px 0;
+                margin-right: 20px;
+              }
+              input[type='radio']:checked + span {
+                color: #4474cf;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  .all-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 5px;
+    > span:first-child {
+      font-size: 12px;
+      color: #666;
+    }
+    > .clear-all {
+      cursor: pointer;
+      font-size: 12px;
+      height: 30px;
+      line-height: 28px;
+      color: #ed4542;
+      padding: 0 10px;
+      margin-left: 15px;
+      box-sizing: border-box;
+      border: 1px #ed4542 dashed;
+      border-radius: 4px;
+    }
+    .el-tag {
+      margin-left: 10px;
+    }
+  }
+}
+</style>

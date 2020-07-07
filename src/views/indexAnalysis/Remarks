@@ -1,0 +1,14 @@
+指标分析备注
+  匹配单项工程待，待匹配文件和一匹配文件数据结构
+      //  已匹配到单项工程 根据文件类型展示不同的icon
+      <!-- <img class="type-icon" src="@/assets/img/GBQ4.png" alt="" v-if="getFileType(scope.row.fileName)=='GBQ4'"> -->
+      <!-- <img class="type-icon" src="@/assets/img/GBQ3.png" alt="" v-if="getFileType(scope.row.fileName)=='GBQ3'"> -->
+      <!-- <img class="type-icon" src="@/assets/img/GQI.png" alt="" v-if="getFileType(scope.row.fileName)=='GQI'"> -->
+      <!-- <img class="type-icon" src="@/assets/img/dwg.png" alt="" v-if="getFileType(scope.row.fileName)=='dwg'"> -->
+      <!-- <img class="type-icon" src="@/assets/img/ppt.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/excel.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/word.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/pic.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/pdf.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/ysb.png" alt=""> -->
+      <!-- <img class="type-icon" src="@/assets/img/bin.png" alt=""> -->

@@ -1,0 +1,119 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <!-- 省 -->
+      <ul>
+        <li v-for="(item, index) in allProvince" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.provinceCode" :value="item.code" @change="provinceSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <!-- 市 -->
+      <ul v-show="allCity.length">
+        <li v-for="(item, index) in allCity" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.cityCode" :value="item.code" @change="citySel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <!-- 区县 -->
+      <ul v-show="allDistrict.length">
+        <li v-for="(item, index) in allDistrict" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.distinctCode" :value="item.code" @change="districtSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+
+export default {
+  props: {
+    title: String
+  },
+  data() {
+    return {
+      allProvince: [],
+      allCity: [],
+      allDistrict: [],
+      conditionParams: {
+        cityCode: '', // 市
+        distinctCode: '', // 区
+        provinceCode: '' // 省
+      }
+    }
+  },
+  methods: {
+    // 获取省份
+    allProvinces() {
+      api.allProvinces().then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allProvince = res.data
+      })
+    },
+    // 选择省份
+    provinceSel(item) {
+      // this.dynamicTags.addressSel = this.provinceName = item.name === '不限' ? '' : item.name
+      // 省份改变时，市为不限 区清空
+      this.conditionParams.cityCode = ''
+      this.conditionParams.distinctCode = ''
+      this.allDistrict = []
+      // 当省份选择不限时，清空市
+      if (!item.code) return (this.allCity = [])
+      this.citiesOfProvince(item.code)
+    },
+
+    // 获取市
+    citiesOfProvince(code) {
+      api.citiesOfProvince(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allCity = res.data
+      })
+    },
+    // 选择市
+    citySel(item) {
+      this.cityName = item.name === '不限' ? '' : item.name
+      this.conditionParams.distinctCode = ''
+      // 当市为不限时，区清空
+      if (!item.code) {
+        this.allDistrict = []
+        // this.dynamicTags.addressSel = this.provinceName
+      } else {
+        // this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+        this.getDistrictByParentCode(item.code)
+      }
+    },
+
+    // 获取区县
+    getDistrictByParentCode(code) {
+      api.getDistrictByParentCode(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allDistrict = res.data
+      })
+    },
+    // 选择区县
+    districtSel(item) {
+      // if (!item.code) {
+      //   this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+      // } else {
+      //   this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName + '-' + item.name
+      // }
+    }
+  },
+  mounted() {
+    this.allProvinces()
+  }
+}
+</script>
+<style lang="less" scoped>
+@import './filter-option.less';
+</style>

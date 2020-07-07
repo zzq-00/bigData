@@ -1,0 +1,171 @@
+<template>
+  <div class="compare-contents">
+    <div class="content">
+      <div class="item" v-for="(item,index) in vm.itemList " :key="index">
+        <img :src="item.image" />
+        <p class="row1">{{item.name}}</p>
+        <p class="row2">{{item.chief}}</p>
+        <div class="btn_wrapper">
+          <div class="button" @click="nextPage(item.type[0])">{{item.btnName[0]}}</div>
+          <div class="button" @click="nextPage(item.type[1])" v-if="item.btnName.length>1">{{item.btnName[1]}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import api from '@/fetch/api'
+export default {
+  components: {},
+  data() {
+    return {
+      vm: {
+        projectName: '大兴机场一号航站楼',
+        itemList: [
+          {
+            name: '单项工程内数据比对',
+            image: require('@/assets/img/compare/picl1.png'),
+            type: [1],
+            chief: '快速检查相同清单综合单价不一致等基础错误。',
+            btnName: ['开始比对']
+          },
+          {
+            name: '同类单项工程数据比对',
+            image: require('@/assets/img/compare/picl2.png'),
+            type: [2, 3],
+            chief: '快速分析项目内同类单项工程指标差异。',
+            btnName: ['技经指标比对', '人材机价格比对']
+          },
+          {
+            name: '库内采样数据比对',
+            image: require('@/assets/img/compare/picl3.png'),
+            type: [4],
+            chief: '根据数据库内类似历史工程对目标工程进行经济、技术指标分析。',
+            btnName: ['开始比对']
+          }
+        ]
+      },
+      projectId: (() => this.$route.params.projectId)(),
+      stageId: (() => this.$route.params.stageId)()
+    }
+  },
+  methods: {
+    changeStage() {
+      this.getAnalyticalInitFolder()
+    },
+    nextPage(type) {
+      var from = this.$route.query.from
+      switch (type) {
+        case 1:
+          var path = `/compare/innerMonomerCompare/` + this.projectId + '/' + this.stageId + '/' + type
+          if (from && from == 'yg') {
+            path = `/compare/innerMonomerCompare/` + this.projectId + '/' + this.stageId + '/' + type + '?from=yg'
+          }
+          this.$router.push({
+            path: path
+          })
+          break
+        case 2:
+        case 3:
+          var path1 = `/compare/withinProject/` + this.projectId + '/' + this.stageId + '/' + type
+          if (from && from == 'yg') {
+            path1 = `/compare/withinProject/` + this.projectId + '/' + this.stageId + '/' + type + '?from=yg'
+          }
+          this.$router.push({
+            path: path1
+          })
+          break
+        case 4:
+          var path1 = `/compare/inLibrary/` + this.projectId + '/' + this.stageId + '/' + type
+          if (from && from == 'yg') {
+            path1 = `/compare/inLibrary/` + this.projectId + '/' + this.stageId + '/' + type + '?from=yg'
+          }
+          this.$router.push({
+            path: path1
+          })
+          // this.$message.error('暂不支持此种比对')
+          break
+        default:
+          break
+      }
+    }
+  },
+  mounted() {
+    this.$store.dispatch('nextStepFUN', 2)
+  }
+}
+</script>
+<style lang="less" scoped>
+.compare-contents {
+  .title {
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    .stage-title {
+      font-size: 18px;
+      font-weight: 400;
+      color: rgba(68, 68, 68, 1);
+    }
+  }
+  .content {
+    padding-top: 82px;
+    display: inline-flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    .item {
+      border: 1px solid #e0e3eb;
+      width: 200px;
+      height: 400px;
+      padding-left: 23px;
+      padding-right: 28px;
+      margin-right: 22px;
+      border-radius: 5px;
+      text-align: center;
+      img {
+        margin-top: 31px;
+        margin-bottom: 42px;
+        width: 120px;
+        height: 120px;
+      }
+      text-align: center;
+      position: relative;
+      .row1 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .row2 {
+        margin-top: 19px;
+        font-size: 12px;
+        font-weight: bold;
+        color: rgba(153, 153, 153, 1);
+        text-align: left;
+      }
+      .btn_wrapper {
+        position: absolute;
+        text-align: center;
+        left: 0;
+        right: 0;
+        bottom: 21px;
+        .button {
+          margin: 10px auto;
+          cursor: pointer;
+          width: 120px;
+          height: 40px;
+          line-height: 40px;
+          border: 1px solid rgba(68, 116, 207, 1);
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: bold;
+          color: rgba(68, 116, 207, 1);
+          &:hover {
+            background-color: #4474cf;
+            color: #ffffff;
+          }
+        }
+      }
+    }
+  }
+}
+</style>

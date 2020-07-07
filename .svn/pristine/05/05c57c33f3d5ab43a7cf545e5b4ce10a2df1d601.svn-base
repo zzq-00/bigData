@@ -1,0 +1,325 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <ul>
+        <li>
+          <label>
+            <span :class="{active: !selValue.length}" @click="select('不限')">不限</span>
+          </label>
+        </li>
+        <!-- <template v-if="noId">
+          <li v-for="(item,index) in List" :key="index">
+            <label>
+              <input type="checkbox" v-model="selValue" :value="item" @change="select(item)">
+              <span>{{item}}</span>
+            </label>
+          </li>
+        </template> -->
+        <li v-for="(item,index) in List" :key="index">
+          <label>
+            <input type="checkbox" v-model="selValue" :value="item" @change="select(item)">
+            <span>{{item.name || item}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import { hospitalRankList, schoolTypeList, railwayRankList, highwayRankList, starRankList } from '@/assets/dicData/dicOption.js'
+import { mapMutations } from 'vuex'
+
+export default {
+  props: {
+    title: String
+  },
+  data() {
+    return {
+      List: [],
+      selValue: []
+    }
+  },
+  computed: {
+    // noId() {
+    //   return ['医院规划等级', '学校类别', '铁路等级', '公路等级', '项目公路等级', '酒店星级'].includes(this.title)
+    // }
+  },
+  methods: {
+    ...mapMutations(['setSingleItemFilterData']),
+    // 获取建设性质
+    getProjectNature() {
+      api.getProjectNature().then(res => (this.List = res.data))
+    },
+    // 获取编制阶段
+    getStages() {
+      api.getStages().then(res => (this.List = res.data))
+    },
+    getDicCommon(type) {
+      api.getDicCommon(type).then(res => (this.List = res.data))
+    },
+    select(item) {
+      if (item === '不限') this.selValue = []
+      switch (this.title) {
+        case '单项工程公路等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              highwayGrade: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { highwayGradeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '面层类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              surfaceCategory: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { surfaceCategorySel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '化工产品类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              chemicalProductsType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { chemicalProductsTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '加油站等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              gasStationGrade: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { gasStationGradeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '储油类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              gasType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { gasTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '原材料类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              materialsType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { materialsTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '产品类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              productsType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { productsTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '围墙类型':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              wallType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { wallTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '储存方式':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              storageMode: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { storageModeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '运输方式':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              shippingType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { shippingTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '开采地址类型':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              miningAddressType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { miningAddressTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '学制':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              educationalSystem: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { educationalSystemSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '充电站等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              stationClass: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { stationClassSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '充电桩类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              chargeType: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { chargeTypeSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '结构类型':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              structureTypeId: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { structureTypeIdSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '建设性质':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              nature: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { natureSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '单项工程编制阶段':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              stage: this.selValue.map(item => item.id)
+            },
+            dynamicTags: { stageSel: this.selValue.map(item => item.name).join('、') || '' }
+          })
+          break
+        case '医院规划等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              hospitalRank: this.selValue
+            },
+            dynamicTags: { hospitalRankSel: this.selValue.join('、') }
+          })
+          break
+        case '学校类别':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              schoolType: this.selValue
+            },
+            dynamicTags: { schoolTypeSel: this.selValue.join('、') }
+          })
+          break
+        case '铁路等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              railwayRank: this.selValue
+            },
+            dynamicTags: { railwayRankSel: this.selValue.join('、') }
+          })
+          break
+        case '项目公路等级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              highwayRank: this.selValue
+            },
+            dynamicTags: { highwayRankSel: this.selValue.join('、') }
+          })
+          break
+        case '酒店星级':
+          this.setSingleItemFilterData({
+            dataForBack: {
+              starRank: this.selValue
+            },
+            dynamicTags: { starRankSel: this.selValue.join('、') }
+          })
+          break
+      }
+    }
+  },
+  mounted() {
+    switch (this.title) {
+      case '单项工程公路等级':
+        this.getDicCommon(21)
+        break
+      case '面层类别':
+        this.getDicCommon(12)
+        break
+      case '化工产品类别':
+        this.getDicCommon(7)
+        break
+      case '加油站等级':
+        this.getDicCommon(8)
+        break
+      case '储油类别':
+        this.getDicCommon(3)
+        break
+      case '原材料类别':
+        this.getDicCommon(15)
+        break
+      case '产品类别':
+        this.getDicCommon(1)
+        break
+      case '围墙类型':
+        this.getDicCommon(13)
+        break
+      case '储存方式':
+        this.getDicCommon(2)
+        break
+      case '运输方式':
+        this.getDicCommon(16)
+        break
+      case '开采地址类型':
+        this.getDicCommon(10)
+        break
+      case '学制':
+        this.getDicCommon(17)
+        break
+      case '充电站等级':
+        this.getDicCommon(19)
+        break
+      case '充电桩类别':
+        this.getDicCommon(18)
+        break
+      case '结构类型':
+        this.getDicCommon(9)
+        break
+      case '建设性质':
+        this.getProjectNature()
+        break
+      case '单项工程编制阶段':
+        this.getStages()
+        break
+      case '医院规划等级':
+        this.List = hospitalRankList
+        break
+      case '学校类别':
+        this.List = schoolTypeList
+        break
+      case '铁路等级':
+        this.List = railwayRankList
+        break
+      case '项目公路等级':
+        this.List = highwayRankList
+        break
+      case '酒店星级':
+        this.List = starRankList
+        break
+    }
+    this.$on('childMethod', res => {
+      if (res === 'reset') this.select('不限')
+    })
+  },
+  destroyed() {
+    this.select('不限')
+  }
+}
+</script>
+<style lang="less" scoped>
+@import '../filter-option.less';
+</style>

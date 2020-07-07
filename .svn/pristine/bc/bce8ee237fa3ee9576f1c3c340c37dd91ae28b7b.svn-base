@@ -1,0 +1,190 @@
+<template>
+  <div>
+    <searchBar :placeholder="placeholder"/>
+    <div class="switch-btn">
+      <span @click="filterStatus = !filterStatus" :class="{'active':filterStatus}">{{filterStatus?'收起过滤':'过滤查询'}}</span>
+    </div>
+    <el-collapse-transition>
+      <div class="filter-option" v-show="filterStatus">
+        <!-- 项目筛选 -->
+        <projectIndustryBelong @deliverValue="deliverValue" key="1"/>
+        <addressList title="项目地点" v-if="projectFilterInclude.includes('项目地点')" key="2"/>
+        <commonSingleChoice title="项目地区类别" v-if="projectFilterInclude.includes('项目地区类别')" key="3"/>
+        <commonMultipleChoice title="建设性质" key="4"/>
+        <commonMultipleChoice title="医院规划等级" v-if="projectFilterInclude.includes('医院规划等级')" key="5"/>
+        <commonMultipleChoice title="学校类别" v-if="projectFilterInclude.includes('学校类别')" key="6"/>
+        <commonInterval title="建设规模" v-if="projectFilterInclude.includes('建设规模')" key="7"/>
+        <commonInterval title="日处理量" v-if="projectFilterInclude.includes('日处理量')" key="8"/>
+        <commonInterval title="项目规划容量" v-if="projectFilterInclude.includes('项目规划容量')" key="9"/>
+        <commonMultipleChoice title="铁路等级" v-if="projectFilterInclude.includes('铁路等级')" key="10"/>
+        <commonInterval title="年客货运量" v-if="projectFilterInclude.includes('年客货运量')" key="11"/>
+        <commonSingleChoice title="城市轨道交通类别" v-if="projectFilterInclude.includes('城市轨道交通类别')" key="12"/>
+        <commonMultipleChoice title="项目公路等级" v-if="projectFilterInclude.includes('项目公路等级')" key="13"/>
+        <commonMultipleChoice title="酒店星级" v-if="projectFilterInclude.includes('酒店星级')" key="14"/>
+        <!-- 工程筛选 -->
+        <monomerType @deliverValue="deliverValue" key="15"/>
+        <commonMultipleChoice title="单项工程编制阶段" key="16" v-if="monomerFilterInclude.includes('单项工程编制阶段')"/>
+        <commonSingleChoice title="有无桩基工程" key="17" v-if="monomerFilterInclude.includes('有无桩基工程')"/>
+        <monomerSelectedDate key="18"/>
+        <commonMultipleChoice title="结构类型" key="19" v-if="monomerFilterInclude.includes('结构类型')"/>
+        <commonInterval title="建筑面积" key="20" v-if="monomerFilterInclude.includes('建筑面积')"/>
+        <commonInterval title="层数" key="21" v-if="monomerFilterInclude.includes('层数')"/>
+        <commonInterval title="车位数" key="22" v-if="monomerFilterInclude.includes('车位数')"/>
+        <commonInterval title="地上建筑面积" key="23" v-if="monomerFilterInclude.includes('地上建筑面积')"/>
+        <commonInterval title="地下建筑面积" key="24" v-if="monomerFilterInclude.includes('地下建筑面积')"/>
+        <commonInterval title="地上层数" key="25" v-if="monomerFilterInclude.includes('地上层数')"/>
+        <commonInterval title="地下层数" key="26" v-if="monomerFilterInclude.includes('地下层数')"/>
+        <commonInterval title="大堂面积" key="27" v-if="monomerFilterInclude.includes('大堂面积')"/>
+        <commonInterval title="车站建筑面积(主体+附属)" key="28" v-if="monomerFilterInclude.includes('车站建筑面积(主体+附属)')"/>
+        <commonInterval title="车站主体建筑面积" key="29" v-if="monomerFilterInclude.includes('车站主体建筑面积')"/>
+        <commonInterval title="车站附属建筑面积" key="30" v-if="monomerFilterInclude.includes('车站附属建筑面积')"/>
+        <commonInterval title="车站层数" key="31" v-if="monomerFilterInclude.includes('车站层数')"/>
+        <commonInterval title="换乘通道个数" key="32" v-if="monomerFilterInclude.includes('换乘通道个数')"/>
+        <commonInterval title="区间长度" key="33" v-if="monomerFilterInclude.includes('区间长度')"/>
+        <commonInterval title="总铺轨长度" key="34" v-if="monomerFilterInclude.includes('总铺轨长度')"/>
+        <commonInterval title="其中正线铺轨长度" key="35" v-if="monomerFilterInclude.includes('其中正线铺轨长度')"/>
+        <commonInterval title="供电电压等级" key="36" v-if="monomerFilterInclude.includes('供电电压等级')"/>
+        <commonInterval title="工程途径重要节点城市" key="37" v-if="monomerFilterInclude.includes('工程途径重要节点城市')"/>
+        <commonInterval title="电压等级" key="38" v-if="monomerFilterInclude.includes('电压等级')"/>
+        <commonInterval title="本期容量" key="39" v-if="monomerFilterInclude.includes('本期容量')"/>
+        <commonInterval title="单项工程规划容量" key="40" v-if="monomerFilterInclude.includes('单项工程规划容量')"/>
+        <commonInterval title="项目容量" key="41" v-if="monomerFilterInclude.includes('项目容量')"/>
+        <commonInterval title="本期容量" key="42" v-if="monomerFilterInclude.includes('本期容量')"/>
+        <commonInterval title="本期台数" key="43" v-if="monomerFilterInclude.includes('本期台数')"/>
+        <addressList title="工程地点" key="44" v-if="monomerFilterInclude.includes('工程地点')"/>
+        <commonSingleChoice title="单选工程地区类别" key="45" v-if="monomerFilterInclude.includes('单选工程地区类别')"/>
+        <commonInterval title="收费通道数量" key="46" v-if="monomerFilterInclude.includes('收费通道数量')"/>
+        <commonMultipleChoice title="单项工程公路等级" key="47" v-if="monomerFilterInclude.includes('单项工程公路等级')"/>
+        <commonInterval title="线路长度" key="48" v-if="monomerFilterInclude.includes('线路长度')"/>
+        <commonMultipleChoice title="面层类别" key="49" v-if="monomerFilterInclude.includes('面层类别')"/>
+        <commonInterval title="区间桥梁(含高架)总长" key="50" v-if="monomerFilterInclude.includes('区间桥梁(含高架)总长')"/>
+        <commonInterval title="区间隧道总长" key="51" v-if="monomerFilterInclude.includes('区间隧道总长')"/>
+        <commonInterval title="送出电压等级" key="52" v-if="monomerFilterInclude.includes('送出电压等级')"/>
+        <commonInterval title="总面积" key="53" v-if="monomerFilterInclude.includes('总面积')"/>
+        <commonInterval title="占地面积" key="54" v-if="monomerFilterInclude.includes('占地面积')"/>
+        <commonInterval title="主跑通道数量" key="55" v-if="monomerFilterInclude.includes('主跑通道数量')"/>
+        <commonMultipleChoice title="化工产品类别" key="56" v-if="monomerFilterInclude.includes('化工产品类别')"/>
+        <commonInterval title="设计生产能力" key="57" v-if="monomerFilterInclude.includes('设计生产能力')"/>
+        <commonMultipleChoice title="加油站等级" key="58" v-if="monomerFilterInclude.includes('加油站等级')"/>
+        <commonInterval title="储油总容积" key="59" v-if="monomerFilterInclude.includes('储油总容积')"/>
+        <commonMultipleChoice title="储油类别" key="60" v-if="monomerFilterInclude.includes('储油类别')"/>
+        <commonInterval title="设计生产能力" key="61" v-if="monomerFilterInclude.includes('设计生产能力')"/>
+        <commonInterval title="桥梁长度" key="62" v-if="monomerFilterInclude.includes('桥梁长度')"/>
+        <commonInterval title="桥梁宽度" key="63" v-if="monomerFilterInclude.includes('桥梁宽度')"/>
+        <commonMultipleChoice title="原材料类别" key="64" v-if="monomerFilterInclude.includes('原材料类别')"/>
+        <commonMultipleChoice title="产品类别" key="65" v-if="monomerFilterInclude.includes('产品类别')"/>
+        <commonInterval title="管道长度" key="66" v-if="monomerFilterInclude.includes('管道长度')"/>
+        <commonInterval title="管道直径" key="67" v-if="monomerFilterInclude.includes('管道直径')"/>
+        <commonMultipleChoice title="围墙类型" key="68" v-if="monomerFilterInclude.includes('围墙类型')"/>
+        <commonInterval title="围墙总长" key="69" v-if="monomerFilterInclude.includes('围墙总长')"/>
+        <commonInterval title="隧道长度" key="70" v-if="monomerFilterInclude.includes('隧道长度')"/>
+        <commonInterval title="檐高(或建筑高度)" key="71" v-if="monomerFilterInclude.includes('檐高(或建筑高度)')"/>
+        <commonInterval title="总层数" key="72" v-if="monomerFilterInclude.includes('总层数')"/>
+        <commonSingleChoice title="道床类型" key="73" v-if="monomerFilterInclude.includes('道床类型')"/>
+        <commonInterval title="床位数" key="74" v-if="monomerFilterInclude.includes('床位数')"/>
+        <commonInterval title="绿化面积" key="75" v-if="monomerFilterInclude.includes('绿化面积')"/>
+        <commonSingleChoice title="储运介质" key="76" v-if="monomerFilterInclude.includes('储运介质')"/>
+        <commonMultipleChoice title="储存方式" key="77" v-if="monomerFilterInclude.includes('储存方式')"/>
+        <commonInterval title="存储容量" key="78" v-if="monomerFilterInclude.includes('存储容量')"/>
+        <commonMultipleChoice title="运输方式" key="79" v-if="monomerFilterInclude.includes('运输方式')"/>
+        <commonInterval title="年运输能力" key="80" v-if="monomerFilterInclude.includes('年运输能力')"/>
+        <commonSingleChoice title="开采类别" key="81" v-if="monomerFilterInclude.includes('开采类别')"/>
+        <commonMultipleChoice title="开采地址类型" key="82" v-if="monomerFilterInclude.includes('开采地址类型')"/>
+        <commonInterval title="年生产能力" key="83" v-if="monomerFilterInclude.includes('年生产能力')"/>
+        <commonInterval title="商业面积" key="84" v-if="monomerFilterInclude.includes('商业面积')"/>
+        <commonInterval title="办公面积" key="85" v-if="monomerFilterInclude.includes('办公面积')"/>
+        <commonMultipleChoice title="学制" key="86" v-if="monomerFilterInclude.includes('学制')"/>
+        <commonInterval title="住宅面积" key="87" v-if="monomerFilterInclude.includes('住宅面积')"/>
+        <commonMultipleChoice title="充电站等级" key="88" v-if="monomerFilterInclude.includes('充电站等级')"/>
+        <commonInterval title="站内充电设施数量" key="89" v-if="monomerFilterInclude.includes('站内充电设施数量')"/>
+        <commonMultipleChoice title="充电桩类别" key="90" v-if="monomerFilterInclude.includes('充电桩类别')"/>
+        <commonInterval title="污水处理能力" key="91" v-if="monomerFilterInclude.includes('污水处理能力')"/>
+      </div>
+    </el-collapse-transition>
+    <!-- <div class="all-result" v-show="Object.values(dynamicTags).some(val => val !== '')">
+      <span>全部结果：</span>
+      <span class="clear-all" @click="closeAll">清空所有</span>
+      <el-tag :key="key" v-for="(tag, key) in dynamicTags" closable @close="handleClose(key)" v-show="tag">
+        {{tag}}
+      </el-tag>
+    </div> -->
+  </div>
+</template>
+<script>
+  import commonSingleChoice from './components/commonSingleChoice'
+  import commonMultipleChoice from './components/commonMultipleChoice'
+  import commonInterval from './components/commonInterval'
+  import {projectFilterList, monomerFilterList} from '@/assets/dicData/singleItemFilter.js'
+
+  export default {
+    props: ['placeholder'],
+    components: {
+      commonSingleChoice, // 单选
+      commonMultipleChoice, // 多选
+      commonInterval, // 区间筛选
+      searchBar: () => import('./searchBar'), // 搜索框
+      projectIndustryBelong: () => import('./projectIndustryBelong'), // 项目行业
+      addressList: () => import('./addressList'), // 地点
+      monomerType: () => import('./monomerType'), // 单项工程分类
+      monomerSelectedDate: () => import('./monomerSelectedDate') // 主体建安工程价格信息取定时间
+    },
+    data() {
+      return {
+        filterStatus: true,
+        dataForBackstage: {},
+        projectFilterInclude: [],
+        monomerFilterInclude: [],
+        projectFilterList,
+        monomerFilterList
+      }
+    },
+    methods: {
+      deliverValue(value) {
+        if (value.type === 'industryBelong') {
+          if (!value.firstSel) {
+            delete this.dataForBackstage.industryBelongCode
+          } else {
+            this.dataForBackstage.industryBelongCode = value.firstSel.id
+          }
+          if (!value.secondSel) {
+            this.projectFilterInclude = []
+            delete this.dataForBackstage.subIndustryBelongCode
+          } else {
+            this.projectFilterInclude = this.projectFilterList[value.secondSel.projectx]
+            this.dataForBackstage.subIndustryBelongCode = value.secondSel.id
+          }
+        } else if (value.type === 'monomerType') {
+          console.log(value.type3.indexCode)
+          this.monomerFilterInclude = this.monomerFilterList[value.type3.indexCode]
+        }
+        this.$emit('getValue', this.dataForBackstage)
+      }
+    },
+    mounted() {
+    }
+  }
+</script>
+<style lang="less" scoped>
+  .switch-btn {
+    color: #666666;
+    font-size: 14px;
+    height: 36px;
+    line-height: 36px;
+
+    > span {
+      cursor: pointer;
+      padding-right: 18px;
+      background: url('~@/assets/img/Retract.png') right no-repeat;
+
+      &.active {
+        background-image: url('~@/assets/img/Open.png');
+      }
+    }
+  }
+
+  .filter-option {
+    font-size: 12px;
+    color: #606266;
+    background-color: #f7f8f9;
+  }
+</style>

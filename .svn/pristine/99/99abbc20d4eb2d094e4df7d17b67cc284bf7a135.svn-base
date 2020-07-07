@@ -1,0 +1,27 @@
+<template>
+  <div>
+    <headerComponent />
+    <keep-alive include="comprehensiveList">
+      <router-view></router-view>
+    </keep-alive>
+  </div>
+</template>
+<script>
+import headerComponent from '@/components/headerComponent'
+// import breadcrumb from '@/components/headerComponent'
+// import projectFilterCom from '@/components/headerComponent'
+import api from '@/fetch/api'
+export default {
+  name: 'comprehensive',
+  components: {
+    headerComponent, // 头部
+    // breadcrumb, //面包屑
+    // projectFilterCom // 筛选
+  },
+  data () {
+    return {
+      // filterType: 'comprehensive',
+    }
+  }
+}
+</script>

@@ -1,0 +1,595 @@
+<template>
+  <div class="res-lists">
+    <div class="proRig">
+      <span class="total">共有 {{tableData.totalElements}} 条数据。</span>
+      <el-button type="text" icon="el-icon-arrow-left" @click="paging('-')" :disabled="queryParameters.page == 1" style="color: black"></el-button>
+      <span v-if="tableData.totalElements>0">{{queryParameters.page}}/{{tableData.totalPages}}</span>
+      <span v-else>{{0}}/{{tableData.totalPages}}</span>
+      <el-button type="text" icon="el-icon-arrow-right" @click="paging('+')" :disabled="queryParameters.page == tableData.totalPages" style="color: black"></el-button>
+    </div>
+    <nav class="nav-title">
+      所有符合条件结果
+      <span :class="[queryParameters.endtimesort==='desc'?(queryParameters.endtimeValue?'activeup':'up'):(queryParameters.endtimeValue?'activedown':'down'), 'sort-icon sort-icon1']" @click="sortClick('endtime')">竣工排序</span>
+      <span :class="[queryParameters.starttimesort==='desc'?(queryParameters.starttimeValue?'activeup':'up'):(queryParameters.starttimeValue?'activedown':'down'), 'sort-icon sort-icon2']" @click="sortClick('starttime')">开工排序</span>
+      <span :class="[queryParameters.pricesort==='desc'?(queryParameters.priceValue?'activeup':'up'):(queryParameters.priceValue?'activedown':'down'), 'sort-icon sort-icon3']" @click="sortClick('price')">价格排序</span>
+    </nav>
+    <ul class="lists" v-if="dataList">
+      <li v-for="item in dataList.content" :key="item.id">
+        <router-link :to="'/indicatorLibrary/singleDetails/'+item.id+'?projectId='+item.projectId">
+          <!-- <div class="list">
+            <img :src="imgShowDiff (item.industryBelong, item.projectType)" alt="" class="bg-img">
+            <div class="right-div">
+              <p class="title" v-html="item.monomerName"></p>
+              <ul class="sub-lists">
+                <li class="sub-list">
+                  结构类型：<span v-html="item.structType"></span>
+                </li>
+                <li class="sub-list">
+                  层数：地上<span v-html="item.groundFloors"></span>层，地下<span v-html="item.undergroundFloors"></span>层
+                </li>
+                <li class="sub-list">
+                  建筑业态：<span v-html="item.structureForm1"></span><span v-if="item.structureForm2" v-html="'/'+item.structureForm2"></span>
+                </li>
+                <li class="sub-list">
+                  指标类型：<span class="flag-span" v-html="item.indicatorName"></span>
+                </li>
+                <li class="sub-list max-sub-list">
+                  建筑面积：<span v-html="item.monomerArea"></span>平方米；地上面积：<span v-html="item.groundArea"></span>㎡；地下面积：<span v-html="item.undergroundArea"></span>㎡；基础面积：<span v-html="item.baseArea"></span>㎡；
+                </li>
+              </ul>
+            </div>
+            <p class="price">{{item.unitPrice}}<span class="unit">元/m<sup>2</sup></span></p>
+          </div> -->
+          <div class="a-list">
+            <p class="title" v-html="item.monomerName"></p>
+            <ul class="sub-lists">
+              <ul class="sub-list">
+                <li>
+                  <i class="icon01"></i>
+                  <span class="text"
+                  :title="item.provinceName+item.cityName+item.distinctName"
+                  >地址：{{item.provinceName}}/{{item.cityName}}<span v-if="item.distinctName">/{{item.distinctName}}</span>
+                  </span>
+                </li>
+                <li>
+                  <i class="icon05"></i>
+                  <span class="text"
+                  :title="'开工/竣工日期：'+item.projectStart+'/'+item.projectEnd">开工/竣工日期：{{item.projectStart}}<span v-if="item.projectEnd">/{{item.projectEnd}}</span>
+                  </span>
+                </li>
+              </ul>
+              <ul class="sub-list sub-list-big">
+                <li class="row-inline">
+                  <i class="icon02"></i>
+                  <div class="col-first">
+                    <p class="text" :title="'建筑面积：'+item.monomerArea">建筑面积：{{item.monomerArea}}㎡；</p>
+                    <p class="text" :title="'地上面积：'+item.groundArea">地上面积：{{item.groundArea}}㎡；</p>
+                  </div>
+                </li>
+                <li class="row-inline">
+                  <div>
+                    <p class="text" :title="'基础面积：' + item.baseArea">基础面积：{{item.baseArea}}㎡；</p>
+                    <p class="text" :title="'地下面积：' + item.undergroundArea">地下面积：{{item.undergroundArea}}㎡；</p>
+                  </div>
+                </li>
+              </ul>
+
+             <ul class="sub-list sub-list-small">
+               <li>
+                  <i class="icon03"></i>
+                  <span class="text"
+                    :title="'层数：地上'+item.groundFloors+'层，地下'+item.undergroundFloors"
+                  >层数：地上<span v-html="item.groundFloors"></span>层，地下<span v-html="item.undergroundFloors"></span>层</span>
+                </li>
+                <li>
+                  <i class="icons"></i>
+                  <span class="text"
+                  :title="'建筑业态：' + item.structureForm1 + item.structureForm2"
+                  >建筑业态：<span v-html="item.structureForm1"></span><span v-if="item.structureForm2" v-html="'/'+item.structureForm2"></span></span>
+                </li>
+             </ul>
+             <ul class="sub-list sub-list-small">
+              <li>
+                  <i class="icon04"></i>
+                  <span class="text"
+                  :title="'指标类型：'+item.indicatorName"
+                  >指标类型：
+                    <span class="flag-cost" v-if="item.indicatorName === '造价指标'">造价</span>
+                    <span class="flag-install" v-else-if="item.indicatorName === '安装算量指标'">安装</span>
+                    <span class="flag-civil" v-else-if="item.indicatorName === '土建算量指标'">土建</span>
+                    <span class="flag-steel" v-else-if="item.indicatorName === '钢筋算量指标'">钢筋</span>
+                    <span v-else-if="item.indicatorName === '安装算量&造价指标'">
+                      <span class="flag-cost">造价</span>
+                      <span class="flag-install">安装</span>
+                    </span>
+                    <span v-else class="flag-cost" v-html="item.indicatorName"></span>
+                  </span>
+                </li>
+                <li>
+                  <i class="icons"></i>
+                  <span class="text"
+                  :title="'结构类型：' + item.structType">结构类型：<span v-html="item.structType"></span></span>
+                </li>
+             </ul>
+            </ul>
+            <p class="price" v-if="item.indicatorName === '钢筋算量指标'">
+              <span v-if="item.steelVolume">
+                {{Number(item.steelVolume).toFixed(2)}}<span class="unit">kg/m<sup>2</sup></span>
+              </span>
+            </p>
+            <p v-else-if="item.indicatorName === '土建算量指标'">
+              <span class="price" v-if="item.masonryVolume" :title="Number(item.masonryVolume).toFixed(2)">
+                {{Number(item.masonryVolume).toFixed(2)}}<span class="unit">m<sup>3</sup>/m<sup>2</sup>（砌体）</span>
+              </span>
+              <span class="civil-num" v-if="item.concreteVolume" :title="Number(item.concreteVolume).toFixed(2)">
+                {{Number(item.concreteVolume).toFixed(2)}}<span class="unit">m<sup>3</sup>/m<sup>2</sup>（混凝土）</span>
+              </span>
+            </p>
+            <p class="price" :title="Number(item.unitPrice).toFixed(2)" v-else-if="item.indicatorName === '造价指标' || item.indicatorName === '安装算量&造价指标'" >{{Number(item.unitPrice).toFixed(2)}}<span class="unit">元/m<sup>2</sup></span></p>
+          </div>
+        </router-link>
+      </li>
+    </ul>
+    <p class="no-data" v-else>~无匹配数据~</p>
+    <div class="block">
+      <el-pagination :current-page="pageData" @current-change="handleCurrentChange"
+      :page-sizes="[10, 20, 30, 40]" :page-size="10" layout=" sizes,prev, pager, next, jumper"
+      :total="tableData.totalElements" @size-change="handleSizeChange">
+      </el-pagination>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  props: {
+    dataList: {
+      required: true
+    },
+    searchWord: {
+      type: String
+    },
+    pageData: {
+      type: Number
+    }
+  },
+  data () {
+    return {
+      // currentPage: 1,
+      queryParameters: {
+        page: 1,
+        size: 10,
+        pricesort: 'asc',
+        endtimesort: 'desc',
+        starttimesort: 'asc',
+        priceValue: false,
+        endtimeValue: false,
+        starttimeValue: false
+      },
+      tableData: {
+        totalElements: 1,
+        totalPages: 0
+      }
+    }
+  },
+  methods: {
+    handleCurrentChange (val) {
+      this.queryParameters.page = val
+      this.$emit('handlePage', val)
+    },
+    handleSizeChange (val) {
+      // 强制回第一页
+      this.queryParameters.page = 1
+      this.queryParameters.size = val
+      this.$emit('handleSize', val)
+    },
+    sortClick (name) {
+      let sort = this.queryParameters[name + 'sort']
+      this.queryParameters.priceValue = false
+      this.queryParameters.endtimeValue = false
+      this.queryParameters.starttimeValue = false
+      this.queryParameters[name + 'Value'] = true
+      let value
+      // 升序false 降序true
+      if (sort === 'asc') {
+        sort = 'desc'
+        value = true
+      } else {
+        sort = 'asc'
+        value = false
+      }
+      this.queryParameters[name + 'sort'] = sort
+      this.$emit(`handle${name}sort`, value, name)
+    },
+    // 列表上部翻页
+    paging (val) {
+      if (val == '-') {
+        this.queryParameters.page = this.queryParameters.page - 1
+        // this.currentPage = this.queryParameters.page
+      }
+      if (val == '+') {
+        this.queryParameters.page = this.queryParameters.page + 1
+        // this.currentPage = this.queryParameters.page
+      }
+      this.$emit('handlePage', this.queryParameters.page)
+    },
+    imgShowDiff (industryBelong, projectType) {
+      let img = ''
+      if (industryBelong === '民用') {
+        switch (projectType) {
+          case '纯住宅':
+            img = require('@/assets/img/people-home.png')
+            break
+          case '纯商业':
+            img = require('@/assets/img/peopel-business.png')
+            break
+          case '商住综合体':
+            img = require('@/assets/img/people-2use.png')
+            break
+          case '办公楼、写字楼':
+            img = require('@/assets/img/people-office.png')
+            break
+          case '其他':
+            img = require('@/assets/img/peopel-else.png')
+            break
+
+          default:
+            img = require('@/assets/img/no-img.png')
+            break
+        }
+      } else if (industryBelong === '公用') {
+        switch (projectType) {
+          case '学校':
+            img = require('@/assets/img/public-school.png')
+            break
+          case '医疗':
+            img = require('@/assets/img/public-hospital.png')
+            break
+          case '场馆':
+            img = require('@/assets/img/public-venue.png')
+            break
+          case '其他':
+            img = require('@/assets/img/public-else.png')
+            break
+
+          default:
+            img = require('@/assets/img/no-img.png')
+            break
+        }
+      } else {
+        img = require('@/assets/img/no-img.png')
+      }
+      return img
+    }
+  },
+  mounted () {
+    let val = this.dataList
+    this.tableData.totalPages = val.totalPages
+    this.tableData.totalElements = val.totalElements
+  },
+  activated () {
+    let val = this.dataList
+    this.tableData.totalPages = val.totalPages
+    this.tableData.totalElements = val.totalElements
+    // this.currentPage = this.pageData
+  },
+  watch: {
+    dataList: function (val) {
+      // 分页
+      // this.currentPage = this.pageData
+      this.queryParameters.page = this.pageData
+      // 判断返回值
+      if (val) {
+        this.tableData.totalPages = val.totalPages
+        this.tableData.totalElements = val.totalElements
+      } else {
+        this.tableData.totalPages = 0
+        this.tableData.totalElements = 0
+      }
+      // 搜索对应显示红色字体
+      var content = val && val.content
+      var reg = new RegExp(this.searchWord, 'gi')
+      if (val && content && this.searchWord) {
+        content.forEach(item => {
+          item.monomerName = item.monomerName && String(item.monomerName).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.structType = item.structType && String(item.structType).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.groundFloors = item.groundFloors && String(item.groundFloors).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.undergroundFloors = item.undergroundFloors && String(item.undergroundFloors).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.structureForm1 = item.structureForm1 && String(item.structureForm1).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          if (item.structureForm2) {
+            item.structureForm2 = String(item.structureForm2).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+            // item.structureForm2 = '/' + item.structureForm2
+          }
+          if (item.indicatorName) {
+            item.indicatorName = String(item.indicatorName).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          } else {
+            item.indicatorName = '未知'
+          }
+          item.monomerArea = item.monomerArea && String(item.monomerArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.groundArea = item.groundArea && String(item.groundArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+          item.undergroundArea = item.undergroundArea && String(item.undergroundArea).replace(reg, '<span style="color: red;">' + this.searchWord + '</span>')
+        })
+      }
+    }
+  }
+}
+</script>
+
+<style lang="less" scoped>
+.res-lists {
+  font-size: 12px;
+  .proRig {
+    text-align: right;
+    color: #606266;
+    padding-right: 20px;
+    .total {
+      margin-right: 20px;
+    }
+    > a {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      line-height: 12px;
+      font-size: 12px;
+      color: #606266;
+      text-align: center;
+    }
+  }
+  .nav-title {
+    text-align: left;
+    color: #888;
+    padding: 6px 0 6px 18px;
+    background-color: #f7f8f9;
+    border: 1px solid #eff2f9;
+    position: relative;
+    .sort-icon{
+      cursor: pointer;
+      padding-left: 20px;
+      background-repeat: no-repeat;
+      background-position: left center;
+      position: absolute;
+      top: 7px;
+      &.up {
+        background-image: url(~@/assets/img/price-up.png);
+      }
+      &.down {
+        background-image: url(~@/assets/img/price-down.png);
+      }
+      &.activeup {
+        background-image: url(~@/assets/img/asc.png);
+      }
+      &.activedown {
+        background-image: url(~@/assets/img/desc.png);
+      }
+    }
+    .sort-icon1{
+      right: 300px;
+    }
+    .sort-icon2{
+      right: 150px;
+    }
+    .sort-icon3{
+      right: 20px;
+    }
+  }
+  .lists {
+    height: calc(100vh - 300px);
+    overflow: auto;
+    background-color: #fff;
+    .list {
+      padding: 20px 50px;
+      position: relative;
+      border: 1px solid #eff2f9;
+      &:hover{
+        background-color: #eff2f9;
+      }
+      .bg-img {
+        display: inline-block;
+        width: 180px;
+        height: 120px;
+        margin-right: 20px;
+        background: #444444;
+      }
+      .right-div {
+        font-size: 12px;
+        color: #666666;
+        display: inline-block;
+        vertical-align: middle;
+        .title {
+          color: #444444;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .sub-lists {
+          width: 800px;
+          .sub-list {
+            width: 250px;
+            display: inline-block;
+            line-height: 30px;
+            overflow: hidden;
+            height: 30px;
+          }
+          .max-sub-list {
+            width: auto;
+          }
+          .flag-span {
+            display: inline-block;
+            border: 1px solid #fea313;
+            padding: 0 3px;
+            line-height: 20px;
+            height: 20px;
+            color: #ff9c00;
+            background-color: #fcf6ec;
+            border-radius: 2px;
+            font-size: 12px;
+          }
+        }
+      }
+      .num-unit {
+        position: absolute;
+        color: #f03d3d;
+        font-size: 18px;
+        font-weight: bold;
+        .unit {
+          margin-left: 5px;
+          font-size: 12px;
+        }
+      }
+      .civil-num{
+        .num-unit;
+        right: 15%;
+        top: 110px;
+      }
+      .price{
+        .num-unit;
+        right: 15%;
+        top: 80px;
+      }
+    }
+    .a-list{
+      padding: 20px 15px 13px 15px;
+      position: relative;
+      border: 1px solid #eff2f9;
+      border-bottom: none;
+      color: #666;
+      font-size: 12px;
+      background-color: #fff;
+      &:first-child{
+        border-top: none;
+      }
+      &:last-child{
+        border-bottom: 1px solid #eff2f9;
+      }
+      .sub-lists{
+        padding: 6px 0 0 25px;
+        margin-right: 5%;
+        overflow: hidden;
+      }
+      .sub-list{
+        width: 25%;
+        float: left;
+        line-height: 26px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+
+      .row-inline{display: inline-block;}
+      .col-first{
+        display: inline-block;
+        min-width: 130px;
+      }
+       .icons{
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+      .icon01{
+        .icons;
+        background: url('../../../assets/img/address.png') no-repeat center center;
+      }
+      .icon02{
+        .icons;
+        vertical-align: top;
+        position: relative;
+        top: 2px;
+        background: url('../../../assets/img/house.png') no-repeat center center;
+      }
+      .icon03{
+        .icons;
+        background: url('../../../assets/img/list.png') no-repeat center center;
+      }
+      .icon04{
+        .icons;
+        background: url('../../../assets/img/flag.png') no-repeat center center;
+      }
+      .icon05{
+        .icons;
+        background: url('../../../assets/img/data.png') no-repeat center center;
+      }
+      .flag-span(@r,@g,@b) {
+        display: inline-block;
+        border: 1px solid rgb(@r,@g,@b);
+        padding: 0 3px;
+        line-height: 20px;
+        height: 20px;
+        color: rgb(@r,@g,@b);
+        background-color: rgba(@r,@g,@b, .1);
+        border-radius: 2px;
+        font-size: 12px;
+      }
+      .flag-cost{
+        .flag-span(237, 71, 49)
+      }
+      .flag-civil{
+        .flag-span(255,156,0)
+      }
+      .flag-install{
+        .flag-span(100,183,132)
+      }
+      .flag-steel{
+        .flag-span(56,126,197)
+      }
+      .text{
+        vertical-align: middle;
+      }
+      .title{
+        color: #444;
+        font-size: 16px;
+        line-height: 16px;
+      }
+      .num-unit {
+        position: absolute;
+        color: #f03d3d;
+        font-size: 18px;
+        font-weight: bold;
+        // min-width: 200px;
+        left: 90%;
+        overflow: hidden;
+        white-space:nowrap;
+        text-overflow:ellipsis;
+        .unit {
+          margin-left: 5px;
+          font-size: 12px;
+          color: #666;
+          font-weight: normal;
+        }
+      }
+      .civil-num{
+        .num-unit;
+        top: 73px;
+      }
+      .price{
+        .num-unit;
+        top: 45px;
+      }
+    }
+  }
+  .no-data {
+    text-align: center;
+    margin-top: 20px;
+    color: #888;
+  }
+  .block {
+    text-align: right;
+    padding-right: 41px;
+    background-color: #E7EAEE;
+    padding-top: 10px;
+    margin-bottom: 10px;
+  }
+}
+ @media screen and(max-width: 1400px) {
+   .res-lists .lists .a-list {
+     .sub-list-big{
+       width: 30%;
+     }
+     .sub-list-small{
+       width: 20%;
+     }
+    .civil-num, .price{
+      left: 88%;
+    }
+   }
+}
+</style>

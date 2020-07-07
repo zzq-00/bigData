@@ -1,0 +1,140 @@
+<template>
+  <div class="filter-list">
+    <span>{{title}}：</span>
+    <div>
+      <!-- 省 -->
+      <ul>
+        <li v-for="(item, index) in allProvince" :key="index">
+          <label>
+            <input type="radio" v-model="provinceObj" :value="item" @change="provinceSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <!-- 市 -->
+      <ul v-show="allCity.length">
+        <li v-for="(item, index) in allCity" :key="index">
+          <label>
+            <input type="radio" v-model="cityObj" :value="item" @change="citySel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <!-- 区县 -->
+      <ul v-show="allDistrict.length">
+        <li v-for="(item, index) in allDistrict" :key="index">
+          <label>
+            <input type="radio" v-model="districtObj" :value="item" @change="districtSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+import { mapMutations } from 'vuex'
+export default {
+  props: {
+    title: String // 项目地点 工程地点
+  },
+  data() {
+    return {
+      allProvince: [],
+      allCity: [],
+      allDistrict: [],
+      provinceObj: { code: '', name: '不限' }, // 省
+      cityObj: { code: '', name: '不限' }, // 市
+      districtObj: { code: '', name: '不限' } // 区
+    }
+  },
+  methods: {
+    ...mapMutations(['setSingleItemFilterData']),
+    // 获取省份
+    allProvinces() {
+      api.allProvinces().then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allProvince = res.data
+      })
+    },
+    // 选择省份
+    provinceSel(item) {
+      if (!item.code) {
+        this.allCity = []
+      } else {
+        this.citiesOfProvince(item.code)
+      }
+      this.cityObj = { code: '', name: '不限' }
+      this.citySel(this.cityObj)
+    },
+
+    // 获取市
+    citiesOfProvince(code) {
+      api.citiesOfProvince(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allCity = res.data
+      })
+    },
+    // 选择市
+    citySel(item) {
+      if (!item.code) {
+        this.allDistrict = []
+      } else {
+        this.getDistrictByParentCode(item.code)
+      }
+      this.districtObj = { code: '', name: '不限' }
+      this.districtSel(this.districtObj)
+    },
+
+    // 获取区县
+    getDistrictByParentCode(code) {
+      api.getDistrictByParentCode(code).then(res => {
+        res.data.unshift({ code: '', name: '不限' })
+        this.allDistrict = res.data
+      })
+    },
+    // 选择区县
+    districtSel(item) {
+      if (this.title === '项目地点') {
+        let commonAddressSel = item.code ? this.provinceObj.name + '-' + this.cityObj.name + '-' + item.name : this.cityObj.code ? this.provinceObj.name + '-' + this.cityObj.name : this.provinceObj.name
+        this.setSingleItemFilterData({
+          dataForBack: {
+            commonProvinceCode: this.provinceObj.code,
+            commonCityCode: this.cityObj.code,
+            commonDistinctCode: item.code
+          },
+          dynamicTags: { commonAddressSel: '项目地点：' + commonAddressSel }
+        })
+      } else if (this.title === '工程地点') {
+        let addressSel = item.code ? this.provinceObj.name + '-' + this.cityObj.name + '-' + item.name : this.cityObj.code ? this.provinceObj.name + '-' + this.cityObj.name : this.provinceObj.name
+        this.setSingleItemFilterData({
+          dataForBack: {
+            provinceCode: this.provinceObj.code,
+            cityCode: this.cityObj.code,
+            distinctCode: item.code
+          },
+          dynamicTags: { addressSel: '工程地点：' + addressSel }
+        })
+      }
+    },
+    initData() {
+      this.provinceObj = { code: '', name: '不限' }
+      this.provinceSel(this.provinceObj)
+    }
+  },
+  mounted() {
+    this.allProvinces()
+    this.$on('childMethod', res => {
+      if (res === 'reset') this.initData()
+    })
+  },
+  destroyed() {
+    this.initData()
+  }
+}
+</script>
+<style lang="less" scoped>
+@import './filter-option.less';
+</style>

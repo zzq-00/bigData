@@ -1,0 +1,103 @@
+<template>
+  <div class="filter-list">
+    <span>单项工程分类：</span>
+    <div>
+      <ul>
+        <li v-for="(item,index) in MonomerTypeFirst" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.type1" :value="item" @change="MonomerTypeFirstSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <ul v-show="MonomerTypeSecond.length">
+        <li v-for="(item,index) in MonomerTypeSecond" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.type2" :value="item" @change="MonomerTypeSecondSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <ul v-show="MonomerTypeThird.length">
+        <li v-for="(item,index) in MonomerTypeThird" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.type3" :value="item" @change="MonomerTypeThirdSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+
+export default {
+  data() {
+    return {
+      MonomerTypeFirstAll: [], // 单项工程分类第一级
+      MonomerTypeSecondAll: [], // 单项工程分类第二级
+      MonomerTypeThirdAll: [], // 单项工程分类第三级
+      conditionParams: {
+        type: 'monomerType',
+        type1: {},
+        type2: {},
+        type3: {}
+      }
+    }
+  },
+  computed: {
+    MonomerTypeFirst() {
+      return [{ id: '', name: '不限' }, ...this.MonomerTypeFirstAll]
+    },
+    MonomerTypeSecond() {
+      let array = this.MonomerTypeSecondAll.filter(item => item.parentId === this.conditionParams.type1.id)
+      return array.length ? [{ id: '', name: '不限' }, ...array] : []
+    },
+    MonomerTypeThird() {
+      let array = this.MonomerTypeThirdAll.filter(item => item.parentId === this.conditionParams.type2.id)
+      return array.length ? [{ id: '', name: '不限' }, ...array] : []
+    }
+  },
+  methods: {
+    // 获取所有的单项工程分类
+    monomerGetMonomerTypeAll() {
+      api.monomerGetMonomerTypeAll().then(res => {
+        this.MonomerTypeFirstAll = res.data['1']
+        this.MonomerTypeSecondAll = res.data['2']
+        this.MonomerTypeThirdAll = res.data['3']
+      })
+    },
+    // 选择单项工程分类一级
+    MonomerTypeFirstSel(item) {
+      // this.dynamicTags.industryBelongSel = this.industryBelongFirstName = item.name === '不限' ? '' : item.name
+      this.conditionParams.type2 = ''
+      this.conditionParams.type3 = ''
+    },
+    // 选择单项工程二级
+    MonomerTypeSecondSel(item) {
+      this.conditionParams.type3 = ''
+      // if (!item.id) {
+      //   this.dynamicTags.industryBelongSel = this.industryBelongFirstName
+      // } else {
+      //   this.dynamicTags.industryBelongSel = this.industryBelongFirstName + '-' + item.name
+      // }
+    },
+    MonomerTypeThirdSel(item) {
+      this.$emit('deliverValue', this.conditionParams)
+      // if (!item.id) {
+      //   this.dynamicTags.industryBelongSel = this.industryBelongFirstName
+      // } else {
+      //   this.dynamicTags.industryBelongSel = this.industryBelongFirstName + '-' + item.name
+      // }
+    }
+  },
+  mounted() {
+    this.monomerGetMonomerTypeAll()
+  }
+}
+</script>
+<style lang="less" scoped>
+@import './filter-option.less';
+</style>

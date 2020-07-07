@@ -1,0 +1,818 @@
+<template>
+  <div>
+    <breadcrumb :breadcrumbs="breadcrumbs" />
+    <div class="container main">
+
+      <div class="filter-com">
+        <div class="switch-btn">
+          <span @click="filterStatus = !filterStatus" :class="{'active':filterStatus}">{{filterStatus?'收起过滤':'过滤查询'}}</span>
+        </div>
+        <!-- 筛选条件 -->
+        <el-collapse-transition>
+          <div class="filter-option" v-show="filterStatus">
+            <!-- 编制依据 -->
+            <div>
+              <span>编制依据：</span>
+              <div>
+                <ul>
+                  <li v-for="(item,index) in yearBase" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.year" :value="item.id" @change="yearSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- 项目行业 industryBelong -->
+            <div>
+              <span>项目行业：</span>
+              <div>
+                <ul>
+                  <li v-for="(item,index) in IndustryBelongFirst" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.industryBelongCode" :value="item.id" @change="IndustryBelongFirstSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+                <ul v-show="IndustryBelongSecond.length">
+                  <li v-for="(item,index) in IndustryBelongSecond" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.industryBelongSecondCode" :value="item.id"  @change="industryBelongSecondSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- 项目地点 address-->
+            <div>
+              <span>项目地点：</span>
+              <div>
+                <!-- 省 -->
+                <ul>
+                  <li v-for="(item, index) in allProvince" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.provinceCode" :value="item.code" @change="provinceSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+                <!-- 市 -->
+                <ul v-show="allCity.length">
+                  <li v-for="(item, index) in allCity" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.cityCode" :value="item.code" @change="citySel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+                <!-- 区县 -->
+                <ul v-show="allDistrict.length">
+                  <li v-for="(item, index) in allDistrict" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.distinctCode" :value="item.code" @change="districtSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- 价格信息取定时间 -->
+            <div >
+              <span>价格信息取定时间：</span>
+              <div>
+                <ul>
+                  <li>
+                    <el-date-picker v-model="priceTime" size="mini" type="daterange" value-format="yyyy-MM-dd" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+                  </li>
+                  <li class="confirm-btn" @click="handleConfirm('priceTime')">确定</li>
+                </ul>
+              </div>
+            </div>
+            <!-- 价格区间 priceRangeMin priceRangeMin-->
+            <div>
+              <span>价格区间：</span>
+              <div>
+                <ul class="postion">
+                  <li>
+                    <input type="number" v-model.trim="priceLowerLimit" class="input-box" >
+                    ~
+                    <input type="number" v-model.trim="priceUpperLimit" class="input-box" >
+                  </li>
+                  <li class="confirm-btn" @click="handleConfirm('priceLimit')">确定</li>
+                  <span class="unit1">元</span>
+                  <span class="unit2">元</span>
+                </ul>
+                
+              </div>
+            </div>
+            <!-- 编制阶段 stage -->
+            <div>
+              <span>编制阶段：</span>
+              <div>
+                <ul>
+                  <li v-for="(item,index) in stageList" :key="index">
+                    <label>
+                      <input type="radio" v-model="conditionParams.stage" :value="item.id" @change="stageSel(item)">
+                      <span>{{item.name}}</span>
+                    </label>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <!-- 清单编码 -->
+            <div>
+              <span>清单编码</span>
+              <div>
+                <ul>
+                  <li><input  v-model.trim="projectCode" @keyup="regValue" class="input-box"></li>
+                  <li class="confirm-btn" @click="handleConfirm('codeSel')">确定</li>
+                </ul>
+              </div>
+            </div>
+            <!-- 清单项目名称 -->
+            <div>
+              <span>清单项目名称</span>
+              <div>
+                <ul>
+                  <li><input type="text" v-model.trim="projectName" @keyup="regValue" class="input-box"></li>
+                  <li class="confirm-btn" @click="handleConfirm('nameSel')">确定</li>
+                </ul>
+              </div>
+            </div>
+            <!-- 清单项目特征 -->
+            <div>
+              <span>清单项目特征</span>
+              <div>
+                <ul>
+                  <li><input type="text" v-model.trim="projectSpecification" @keyup="regValue" class="input-box"></li>
+                  <li class="confirm-btn" @click="handleConfirm('specificationSel')">确定</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </el-collapse-transition>
+        <!-- 动态标记 -->
+        <div class="all-result" v-show="Object.values(dynamicTags).some(val => val !== '')">
+          <span>全部结果：</span>
+          <span class="clear-all" @click="closeAll">清空所有</span>
+          <el-tag :key="key" v-for="(tag, key) in dynamicTags" closable @close="handleClose(key)" v-show="tag">
+            {{tag}}
+          </el-tag>
+        </div>
+      </div>
+             
+      <!-- 项目数量 -->
+      <div class="project_num">
+        <div class="another-pagination">
+          <span>共有 {{totalElements}} 条项目</span>
+          <span v-show="totalPages">
+            <el-button type="text" icon="el-icon-arrow-left" :disabled="conditionParams.page==1" @click="conditionParams.page--"></el-button>
+            <span>{{conditionParams.page}}/{{totalPages}} </span>
+            <el-button type="text" icon="el-icon-arrow-right" :disabled="conditionParams.page==totalPages" @click="conditionParams.page++"></el-button>
+          </span>
+        </div>
+      </div>
+
+      <!-- 筛选结果 -->
+      <div class="my_project">
+        <div class="project_header">
+          <div  class="fl">
+            <span class="fl">所有符合条件结果</span>
+            <div class="evaluation fl" v-if ="selectUnit&&selectUnit !== '不限'">
+              <span> 最大值：<i>{{maxPrice}}</i>元</span>
+              <span> 最小值：<i>{{minPrice}}</i>元</span>
+              <span> 平均值：<i> {{avgPrice}} </i>元</span>          
+            </div>
+          </div>         
+          <div class="fr" >
+            <div class="fl selectUnit"> 
+              <el-select v-model="selectUnit"  @change="selectUnitChange" placeholder="选择单位">
+                <el-option v-for="(item,index) in units" :key="index" :value="item"></el-option>
+              </el-select>
+            </div>         
+            <span class="price" :class="{up: conditionParams.descOrAsc === true, down: conditionParams.descOrAsc === false}" @click="priceSort">价格排序</span>
+          </div>          
+        </div>
+        <div v-loading="loading">
+          <el-table size="mini" :data="tableData" style="width: 100%" height="calc(100vh - 305px)" @row-click="rowClick" class="comprehensive-table">
+            <el-table-column  align="center" width="200">
+              <template slot-scope="scope">
+                <div v-html="scope.row.oldCode"></div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="name"  width="300">
+              <template slot-scope="scope">
+                <div v-html="scope.row.name"></div>
+              </template>
+            </el-table-column>
+            <el-table-column  >
+              <template slot-scope="scope">
+                <dl>
+                  <dt style="color: #A5A8AB;"><img src="@/assets/img/list.png" alt="" style="margin-right: 8px;">项目特征</dt>
+                  <dd style="margin-left: 24px;" v-html="scope.row.spec"></dd>
+                </dl>
+              </template>
+            </el-table-column>
+            <el-table-column  width="240">
+              <template slot-scope="scope" >
+                <span><b style="font-size: 18px;color: #F03D3D;">{{scope.row.cost}}</b> {{'元/' + scope.row.unit}}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+      </div>
+      <!-- 页数 -->
+      <div class="block" v-show="tableData.length">
+        <el-pagination 
+        @size-change="handleSizeChange" 
+        @current-change="handleCurrentChange" 
+        :current-page.sync="conditionParams.page" 
+        :page-sizes="[10, 20, 50, 100]" 
+        :page-size.sync="conditionParams.size" 
+        layout="sizes, prev, pager, next, jumper" 
+        :total="totalElements"></el-pagination>
+      </div>
+    </div>   
+  </div>
+</template>
+
+<script>
+import breadcrumb from '@/components/breadcrumb'
+import api from '@/fetch/api'
+export default {
+  name:'comprehensiveList',
+  components: {
+    breadcrumb
+  },
+  data () {
+    return {
+      breadcrumbs: [{ name: '综合单价指标库', path: this.$route.fullPath }],
+      loading: false,
+      filterStatus: false,
+      selectUnit: '',
+      yearBase: [{id: '', name: '不限'},{id: 2013, name: '2013清单'},{id: 2018, name: '2018清单'}], // 编制依据
+      IndustryBelongFirst: [], // 项目行业
+      IndustryBelongSecond: [], // 项目行业二级
+      allProvince: [], // 省
+      allCity: [], // 市
+      allDistrict: [], // 县/区     
+      stageList: [], // 编制阶段
+      priceTime: [], //价格信息取定时间
+      // priceLimit: [], // 价格区间
+      priceLowerLimit: '',
+      priceUpperLimit: '',
+      projectCode: '',// 清单编码
+      projectName: '', // 清单项目名称
+      projectSpecification: '', // 清单项目特征
+      industryBelongFirstName: '',
+      provinceName: '',
+      cityName: '',
+      maxPrice: '',
+      minPrice:'',
+      avgPrice: '',
+      conditionParams: {
+        column: 'code',
+        descOrAsc: null,
+        page: 1,
+        size: 20,
+        oldCode: '', // 清单编码
+        name: '', // 清单项目名称
+        specification: '', // 清单项目特征
+        industryBelongCode: '', // 项目行业选择
+        industryBelongSecondCode: '', // 项目行业二级选择
+        provinceCode: '', // 省选择
+        cityCode: '', // 市选择
+        distinctCode: '', // 区选择
+        priceTimeEarly: '', // 价格信息确定时间（最早）
+        priceTimeLate: '', // 价格信息确定时间（最晚）
+        priceLowerLimit: '', // 价格下限
+        priceUpperLimit: '', // 价格上限
+        stage: '', // 编制选择
+        year: '', // 编制依据选择
+        unit: ''  // 筛选单位
+      },
+      // 动态标签
+      dynamicTags:{
+        industryBelongSel: '', // 行业
+        addressSel: '', // 地点
+        stageSel: '', // 编制阶段选择
+        yearSel: '', // 编制依据选择
+        priceTimeSel: '', // 价格时间取定
+        priceLimitSel: '', // 价格区间
+        codeSel: '', //清单编码
+        nameSel: '', // 清单名称
+        specificationSel: '', // 清单项目特征
+      },
+      totalElements: 0, // 总数
+      totalPages: 0, // 总页数
+      // 表格
+      tableData: [], // 表格数据
+      units: [] // 单位
+    }
+  },
+  created (){
+    this.getIndustryBelongFirst()
+    this.allProvinces()
+    this.getStages()
+    this.getBQItemByCondition()
+    this.getBQItemUnitByCondition()
+  },
+  watch: {
+    conditionParams: {
+      handler: 'getBQItemByCondition',
+      deep: true
+    }
+  },
+  methods: {
+    regValue () {
+      this.projectCode = this.projectCode.replace(/\D/g,'')
+      this.projectName = this.projectName.replace(/[\d]/g,'')
+      this.projectSpecification = this.projectSpecification.replace(/[\d]/g,'')
+    },
+    // 根据综合单价清单查询
+    async getBQItemByCondition() {
+      this.loading = true
+      const {data: res} =await api.getBQItemByCondition(this.conditionParams)
+      this.loading = false
+      this.tableData = res.page.content
+      this.totalElements = res.page.totalElements
+      this.maxPrice = res.maxPrice
+      this.minPrice = res.minPrice
+      this.avgPrice = res.avgPrice
+      this.totalPages = Math.ceil(res.page.totalElements / this.conditionParams.size)     
+    },
+    // 获取单位
+    async getBQItemUnitByCondition () {
+      const {data: res} =  await api.getBQItemUnitByCondition (this.conditionParams)
+      res.unshift('不限')
+      this.units = res
+    },
+
+    // 价格排序
+    priceSort () {
+      this.conditionParams.column = 'cost'
+      this.conditionParams.page = 1
+      this.conditionParams.descOrAsc = !this.conditionParams.descOrAsc
+    },
+    // 单位筛选
+    selectUnitChange (val) {
+      if(this.selectUnit === '不限') {
+        this.conditionParams.unit = ''
+        return false
+      }
+      this.conditionParams.unit = val
+    },
+
+    // 确定
+    handleConfirm (type) {
+      if (type === 'priceTime') {
+        if(!this.priceTime.length) {
+          return this.$message({
+            message:'请选择时间范围',
+            showClose: true
+          })
+        }
+        this.conditionParams.priceTimeEarly = this.priceTime[0]
+        this.conditionParams.priceTimeLate = this.priceTime[1]
+        this.dynamicTags.priceTimeSel = `${this.conditionParams.priceTimeEarly} - ${this.conditionParams.priceTimeLate}`
+      } else if (type === 'priceLimit') {
+        if(!this.priceLowerLimit || !this.priceUpperLimit) {
+          return this.$message({
+            message:'请输入正确价格区间',
+            showClose: true
+          })
+        }
+        this.conditionParams.priceLowerLimit = this.priceLowerLimit
+        this.conditionParams.priceUpperLimit = this.priceUpperLimit
+        this.dynamicTags.priceLimitSel = `${this.priceLowerLimit}元 - ${this.priceUpperLimit}元`       
+      } else if (type === 'codeSel') {
+        if (!this.projectCode) {
+          return this.$message({
+            message: '请输入清单编码',
+            showClose: true
+          })
+        }
+        this.conditionParams.oldCode = this.projectCode
+        this.dynamicTags.codeSel = this.projectCode
+      } else if (type === 'nameSel') {
+        if (!this.projectName) {
+          return this.$message({
+            message: '请输入清单项目名称',
+            showClose: true
+          })
+        }
+        this.conditionParams.name = this.projectName
+        this.dynamicTags.nameSel = this.projectName
+      } else if (type === 'specificationSel') {
+        if (!this.projectSpecification) {
+          return this.$message({
+            message: '请输入项目特征',
+            showClose: true
+          })
+        }
+        this.conditionParams.specification = this.projectSpecification
+        this.dynamicTags.specificationSel = this.projectSpecification
+      }
+    },
+    handleClose (key) { 
+      switch (key) { 
+        case 'industryBelongSel':
+          this.conditionParams.industryBelongCode = ''
+          this.IndustryBelongFirstSel({ id: '', name: '不限' })
+          break
+        case 'addressSel':
+          this.conditionParams.provinceCode = ''
+          this.provinceSel({ id: '', name: '不限' })
+          break
+        case 'stageSel':
+          this.conditionParams.stage = ''
+          this.stageSel({ id: '', name: '不限' })
+          break
+        case 'yearSel':
+          this.conditionParams.year = ''
+          this.yearSel({ id: '', name: '不限' })
+          break
+        case 'priceTimeSel':
+          this.priceTime = []
+          this.dynamicTags.priceTimeSel = ''
+          this.conditionParams.priceTimeEarly = ''
+          this.conditionParams.priceTimeLate = ''
+          break
+        case 'priceLimitSel':
+          this.dynamicTags.priceLimitSel = ''
+          this.conditionParams.priceLowerLimit = ''
+          this.conditionParams.priceUpperLimit = ''
+          this.priceLowerLimit = ''
+          this.priceUpperLimit = ''
+          break
+        case 'codeSel':
+          this.projectCode = ''
+          this.conditionParams.oldCode = ''
+          this.dynamicTags.codeSel = ''
+          break
+         case 'nameSel':
+          this.projectName = ''
+          this.conditionParams.name = ''
+          this.dynamicTags.nameSel = ''
+          break
+        case 'specificationSel':
+          this.projectSpecification = ''
+          this.conditionParams.specification = ''
+          this.dynamicTags.specificationSel = ''
+          break
+      }
+    },
+    // 关闭
+    closeAll() {
+      this.handleClose('yearSel') 
+      this.handleClose('industryBelongSel')
+      this.handleClose('addressSel')
+      this.handleClose('stageSel') 
+      this.handleClose('priceTimeSel')
+      this.handleClose('priceLimitSel')
+      this.handleClose('codeSel')
+      this.handleClose('nameSel')
+      this.handleClose('specificationSel')
+    },
+
+    // 整行跳转
+    rowClick (row, column, event) {
+      this.$router.push('/indicatorLibrary/comprehensive/' + row.unitProjectId+'/'+row.code)
+    },
+
+    // 翻页
+    handleCurrentChange(val) {      
+      this.conditionParams.page = val
+    },
+    // 改变每页项目数量
+    handleSizeChange(val) {      
+      this.conditionParams.page = 1
+      this.conditionParams.size = val
+    },
+
+    // 编制依据
+    yearSel(item) {
+      this.dynamicTags.yearSel = item.name === '不限' ? '' : item.name
+    },
+
+    // 获取项目行业一级
+    async getIndustryBelongFirst () {
+      const { data: res } = await api.getIndustryBelongFirst()      
+      res.unshift({ id: '', name: '不限' })
+      this.IndustryBelongFirst = res
+    },
+   // 选择项目行业
+    IndustryBelongFirstSel (item) {
+      this.dynamicTags.industryBelongSel = this.industryBelongFirstName = item.name === '不限' ? '' : item.name
+      // 一级行业改变时，二级行业为不限
+      this.conditionParams.industryBelongSecondCode = ''
+      // 当项目行业一级为不限时，清空二级
+      if (!item.id) return (this.IndustryBelongSecond = []) 
+      this. getIndustrySecondByParentId(item.id)  
+    },
+    // 获取项目行业二级
+    async getIndustrySecondByParentId (id) {
+      const { data: res } = await api.getIndustrySecondByParentId(id)
+      res.length && res.unshift({ id:'', name: '不限'})
+      this.IndustryBelongSecond = res
+    },
+    // 选择二级项目行业
+    industryBelongSecondSel (item) {
+      if (!item.id) {
+        this.dynamicTags.industryBelongSel = this.industryBelongFirstName
+      } else {
+        this.dynamicTags.industryBelongSel = this.industryBelongFirstName + '-' + item.name
+      }    
+    },
+
+    // 获取省 
+    async allProvinces () {
+      const { data: res} = await api.allProvinces()  
+      res.unshift({ code: '', name: '不限' })
+      this.allProvince = res
+    },
+    // 选择省
+    provinceSel (item) {  
+      this.dynamicTags.addressSel = this.provinceName = item.name === '不限' ? '' : item.name
+      // 省份改变时，市为不限 区清空
+      this.conditionParams.cityCode = ''
+      this.conditionParams.distinctCode = ''
+      // 当省份选择不限时，清空市
+      if (!item.code) return (this.allCity = [])
+      this.citiesOfProvince(item.code)
+    },
+    // 获取市
+    async citiesOfProvince(code) {
+      const {data: res} =await api.citiesOfProvince(code)
+      res.unshift({code: '', name: '不限'})
+      this.allCity = res
+    },
+    // 选择市
+    citySel(item) {
+      this.cityName = item.name === '不限' ? '' : item.name
+      this.conditionParams.distinctCode = ''
+      // 当市为不限时，区清空
+      // 当市为不限时，区清空
+      if (!item.code) {
+        this.allDistrict = []
+        this.dynamicTags.addressSel = this.provinceName
+      } else {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+        this.getDistrictByParentCode(item.code)
+      }
+    },
+    // 获取县/区
+    async getDistrictByParentCode(code) {
+      const {data: res} =await api.getDistrictByParentCode(code) 
+      res.unshift({ code: '', name: '不限' })
+      this.allDistrict = res
+    },
+    // 选择区县
+    districtSel(item) {
+      if (!item.code) {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName
+      } else {
+        this.dynamicTags.addressSel = this.provinceName + '-' + this.cityName + '-' + item.name
+      }
+    },
+
+    // 获取编制阶段
+    async getStages() {
+      const {data: res} = await api.getStages()
+      res.unshift({id: '', name: '不限'})
+      this.stageList = res
+    },
+    // 选择编制阶段
+    stageSel(item) {
+      this.dynamicTags.stageSel = item.name == '不限' ? '' : item.name
+    },
+
+  },
+}
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped lang="less"> 
+.container {
+  box-sizing: border-box;
+  &.main {
+    padding: 15px 0;
+  }
+  .block {
+   text-align: right;
+   margin-top: 15px;
+  }
+}
+.filter-com {
+  input[type='radio'] {
+    display: none;
+  }
+  .input-box {
+    width: 146.5px;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid #dcdfe6;
+    color: #606266;
+  }
+  .postion{
+       position: relative;
+      .unit1{
+        position: absolute;
+        // display: inline;
+        color:#222;
+        top: 5px;
+        left: 150px;
+        color: #bebebe;
+      }
+      .unit2{
+        position: absolute;
+        // display: inline;
+        color:#222;
+        top: 5px;
+        left: 335px;
+        color: #bebebe;
+      }
+    }
+  
+  
+  .switch-btn {
+    color: #666666;
+    font-size: 14px;
+    height: 36px;
+    line-height: 36px;
+    > span {
+      cursor: pointer;
+      padding-right: 18px;
+      background: url('~@/assets/img/Retract.png') right no-repeat;
+      &.active {
+        background-image:url('~@/assets/img/Open.png');
+      }
+    }
+  }
+  .filter-option {
+    font-size: 12px;
+    color: #606266;
+    background-color: #f7f8f9;
+    .confirm-btn {
+      cursor: pointer;
+        width: 40px;
+        height: 26px;
+        line-height: 26px;
+        color: #606266;
+        background-color: #eee;
+        border: 1px solid #e3e2e2;
+        text-align: center;
+        margin-left: 10px;
+      }
+    > div {
+      padding: 5px 15px;
+      display: flex;
+      & + div {
+        border-top: 1px solid #eff2f9;
+      }
+      > span:first-child {
+        color: #bebebe;
+        margin-top: 7px;
+        flex: 0 0 110px;
+      }
+      > div {
+        flex: 1;
+        > ul {
+          overflow: hidden;
+          & + ul {
+            margin-top: 5px;
+          }
+          > li {
+            float: left;
+            > label {
+              > span {
+                cursor: pointer;
+                display: inline-block;
+                padding: 7px 0;
+                margin-right: 20px;
+              }
+              input[type='radio']:checked + span {
+                color: #4474cf;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  .all-result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 5px;
+    > span:first-child {
+      font-size: 12px;
+      color: #666;
+    }
+    > .clear-all {
+      cursor: pointer;
+      font-size: 12px;
+      height: 30px;
+      line-height: 28px;
+      color: #ed4542;
+      padding: 0 10px;
+      margin-left: 15px;
+      box-sizing: border-box;
+      border: 1px #ed4542 dashed;
+      border-radius: 4px;
+    }
+    .el-tag {
+      margin-left: 10px;
+    }
+  }
+}
+.project_num {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 5px 0;
+  .another-pagination {
+    > span:last-child {
+      margin: 0 10px;
+    }
+  }
+}
+
+.my_project {
+  .project_header {
+    height: 28px;
+    line-height: 28px;
+    padding: 0 37px 0 18px;
+    background-color: #fafafb;
+    border: 1px solid #eff2f9;
+    font-size: 12px;
+    color: #888888;
+    .evaluation {
+      > span:first-child{
+        padding-left: 30px;
+      }
+      span {
+        padding-left: 18px;
+        i{
+          font-size:14px;
+          font-family:Arial;
+          font-style:Italic;
+          color:rgba(68,116,207,1);
+          padding: 0 3px;
+        }
+      }    
+    }
+    /deep/.selectUnit {
+      padding-right:70px;
+      .el-input__inner{
+        width: 100px;
+        height: 30px;
+        line-height: 30px;
+        border:none;
+        outline: none;
+        background-color: transparent;
+        text-align: center;
+      }
+      .el-input__icon {
+        line-height: 30px;
+      }
+      
+    }
+    .price {
+      cursor: pointer;
+      // padding-left: 20px;
+      padding-right: 20px;
+      background-repeat: no-repeat;
+      background-position: right center;
+      background-image: url(~@/assets/img/price-down.png);
+      &.up {
+        background-image: url(~@/assets/img/asc.png);
+      }
+      &.down {
+        background-image: url(~@/assets/img/desc.png);
+      }
+    }
+  }
+  /deep/ .el-table .cell{
+      height: auto;
+  }
+}
+
+
+
+</style>
+<style scoped>
+.selection-list >>> .el-radio__label {
+  font-size: 12px;
+}
+.comprehensive-table >>> .el-table__body > tbody > tr {
+  cursor: pointer;
+}
+.comprehensive-table >>> .el-table__header-wrapper{
+  display: none;
+}
+</style>

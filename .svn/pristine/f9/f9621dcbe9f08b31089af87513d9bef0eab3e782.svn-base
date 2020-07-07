@@ -1,0 +1,87 @@
+<template>
+  <div class="filter-list">
+    <span>项目行业：</span>
+    <div>
+      <ul>
+        <li>
+          <label>
+            <span :class="{active: !conditionParams.firstSel}" @click="IndustryBelongFirstSel('不限')">不限</span>
+          </label>
+        </li>
+        <li v-for="(item,index) in IndustryBelongFirst" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.firstSel" :value="item" @change="IndustryBelongFirstSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+      <ul v-show="IndustryBelongSecond.length">
+        <li>
+          <label>
+            <span :class="{active: !conditionParams.secondSel}" @click="industryBelongSecondSel('不限')">不限</span>
+          </label>
+        </li>
+        <li v-for="(item,index) in IndustryBelongSecond" :key="index">
+          <label>
+            <input type="radio" v-model="conditionParams.secondSel" :value="item" @change="industryBelongSecondSel(item)">
+            <span>{{item.name}}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '@/fetch/api'
+
+export default {
+  data() {
+    return {
+      IndustryBelongFirst: [], // 项目行业
+      IndustryBelongSecond: [], // 项目行业二级
+      conditionParams: {
+        type: 'industryBelong',
+        firstSel: '', // 项目行业
+        secondSel: '' // 项目行业二级
+      }
+    }
+  },
+  methods: {
+    // 获取项目行业
+    getIndustryBelongFirst() {
+      api.getIndustryBelongFirst().then(res => (this.IndustryBelongFirst = res.data))
+    },
+    // 选择项目行业
+    IndustryBelongFirstSel(item) {
+      this.conditionParams.secondSel = ''
+      // 当项目行业一级为不限时，清空二级
+      if (item === '不限') {
+        this.conditionParams.firstSel = ''
+        this.IndustryBelongSecond = []
+      } else {
+        this.getIndustrySecondByParentId(item.id)
+      }
+      this.deliverValue()
+    },
+    // 获取项目行业二级
+    getIndustrySecondByParentId(id) {
+      api.getIndustrySecondByParentId(id).then(res => (this.IndustryBelongSecond = res.data))
+    },
+    // 选择项目行业二级
+    industryBelongSecondSel(item) {
+      if (item === '不限') this.conditionParams.secondSel = ''
+      this.deliverValue()
+    },
+    deliverValue() {
+      this.$emit('deliverValue', this.conditionParams)
+    }
+  },
+  mounted() {
+    this.getIndustryBelongFirst()
+  }
+}
+</script>
+<style lang="less" scoped>
+@import './filter-option.less';
+</style>

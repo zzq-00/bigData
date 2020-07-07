@@ -1,0 +1,91 @@
+/* 去除elementUI输入框、按钮圆角 */
+.el-input__inner {
+  border-radius: 0;
+}
+
+/* 改侧栏的二级菜单 */
+.side-menu {
+  .el-submenu .el-menu {
+    background-color: #eaecf5;
+  }
+  .el-menu-item, .el-submenu__title {
+    height: 40px;
+    line-height: 40px;
+  }
+}
+
+/* 改项目首页表格 */
+.project-tables {
+  .el-table th {
+    background-color: #fafafb;
+  }
+}
+
+/* 改错误提示位置 */
+.el-message {
+  top: 70px !important;
+}
+
+// 表格斑马纹颜色
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+  background-color: #F5F6F8 !important;
+}
+// 表格HOVER颜色
+.el-table--striped .el-table__body tr.el-table__row--striped.current-row td, .el-table__body tr.current-row>td, .el-table__body tr.hover-row.current-row>td, .el-table__body tr.hover-row.el-table__row--striped.current-row>td, .el-table__body tr.hover-row.el-table__row--striped>td, .el-table__body tr.hover-row>td {
+  background-color: #ecf4ff !important;
+}
+.el-table--enable-row-hover .el-table__body tr:hover>td {
+  background-color: #ecf4ff !important;
+}
+//表头的下部边框取消
+.el-table__body-wrapper .el-table--border.is-scrolling-left~.el-table__fixed {
+  // border-bottom: none !important;
+}
+
+.actived {
+  color: #409eff !important;
+  background: #eaeefb !important;
+}
+
+/* 修改分页器样式 */
+.el-pager li {
+  background: none;
+}
+.el-pagination button:disabled {
+  background-color: initial;
+}
+.el-pagination .btn-next, .el-pagination .btn-prev {
+  background-color: initial;
+}
+
+.el-table {
+  font-size: 12px;
+}
+
+.el-table .cell {
+  height: 30px;
+  line-height: 30px;
+}
+
+th, td {
+  padding: 0 !important;
+  height: 30px;
+  line-height: 30px;
+}
+
+.el-table__body-wrapper::-webkit-scrollbar {
+  width: 17px;
+  height: 17px;
+}
+
+.el-table__body-wrapper::-webkit-scrollbar-thumb {
+  background-color: #a2acc0;
+}
+.el-table [class*=el-table__row--level] .el-table__expand-icon{
+  margin-right: 0;
+}
+// 提示框
+.el-tooltip__popper{
+  max-width:600px;
+  line-height: 18px;
+}

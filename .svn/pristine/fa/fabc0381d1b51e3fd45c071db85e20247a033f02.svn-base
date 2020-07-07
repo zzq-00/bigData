@@ -1,0 +1,1143 @@
+<template>
+  <div class="analysis-page">
+    <headerComponent />
+    <breadcrumb :breadcrumbs="vm.breadcrumbs" />
+    <div class="analysis-content">
+      <stepBar v-bind:ctitle="vm.title" v-bind:cStepList="vm.stage" />
+      <div class="content">
+        <div class="left">
+          <div class="top">
+            <div class="prompt">请选择需要对比的单项工程</div>
+            <div :class="[ extractTable.length>0? 'tree-box' : '','box-length' ]">
+              <el-tree :data="data" show-checkbox default-expand-all node-key="index" ref="trees" :check-strictly="true" highlight-current :render-content="renderContent" @check-change="handleClick" :props="defaultProps">
+              </el-tree>
+            </div>
+            <div :class="['tree-box', extractTable.length>0? 'trees-box' : '']" v-if="extractTable.length>0">
+              <p class="reselect">
+                <span>参与比对的库内单项工程：</span>
+                <button @click="clickReselect()">重选</button>
+              </p>
+              <el-tree class="trees" :data="extractTable" default-expand-all node-key="index" ref="reselectTrees" highlight-current :render-content="renderContent" :props="defaultProps">
+              </el-tree>
+            </div>
+
+          </div>
+          <div class="bottom">
+            <div class="l-left" @click="goBack">重选比对类型</div>
+            <div v-if="lm.step!=4" class="l-right" @click="startProCompare">开始比对</div>
+            <div v-if="lm.step==4" class="l-right" @click="saveCompareReulst">保存比对结果</div>
+          </div>
+        </div>
+        <div class="right">
+          <el-tabs v-model="lm.dataType" @tab-click="changeTab">
+            <el-tab-pane v-for="(item,index) in tabList" :key="index" :label="item.label" :name="item.name+''"></el-tab-pane>
+          </el-tabs>
+          <div v-if="lm.step==3" class="bottom blank">
+            <img src="@/assets/img/compare/picr.png" />
+            <span class="prompt">请先在左侧选择单项工程，并点击“开始比对”。</span>
+          </div>
+          <div v-if="lm.step==4" v-loading="lm.loading">
+            <div class="mid">
+              <!-- sign：1标记正常项、调整计算项； 2退出标记和标记完成；3退出调整和调整完成 -->
+              <div class="btn-group">
+                <span class="row btn1" v-if="!sign[lm.dataType]||sign[lm.dataType]==1" @click="tagChange(2)">标记正常项</span>
+                <span class="row btn2" v-if="sign[lm.dataType]==2" @click="tagChange(1,'esc')">退出标记</span>
+                <span class="row btn3" v-if="sign[lm.dataType]==2" @click="tagFinish('signs')">标记完成</span>
+                <span class="row btn2" v-if="lm.specialMenuIndex.indexOf(lm.dataType)!=-1" @click="tagChange(3)">{{lm.dataType==3?'调整参与对比项':'调整计算项'}}</span>
+                <span class="row btn2" v-if="sign[lm.dataType]==3" @click="tagChange(1,'esc')">退出调整</span>
+                <span class="row btn3" v-if="sign[lm.dataType]==3" @click="tagFinish('adjustment')">调整完成</span>
+              </div>
+              <div class="word-group" v-if="lm.specialMenuIndex.indexOf(lm.dataType)!=-1">
+                <span class="division"></span>
+                <span class="result">偏差基准：平均值</span>
+                <span class="result">偏差范围</span>：
+                <span :class="['result',{'may-point':true}]" @click="modificationBias">{{deviationRange[lm.dataType].from}}%~{{deviationRange[lm.dataType].to}}%</span>
+              </div>
+              <span class="division"></span>
+              <div class="choice-group">
+                <el-radio v-model="vm.radio" label="1" @change="changeData">全部</el-radio>
+                <el-radio v-model="vm.radio" label="2" @change="changeData">异常项</el-radio>
+              </div>
+              <span class="division"></span>
+              <span class="appraisal" v-if="expertConclusion[this.lm.dataType].show">鉴定意见：{{expertConclusion[this.lm.dataType].tip}}</span>
+              <!-- 总指标对比不显示 -->
+              <!--<div class="drop-down" v-if="lm.dataType!=1&&lm.dataType!=7">-->
+              <!--<el-dropdown @command="handleCommand">-->
+              <!--<el-button type="primary">-->
+              <!--显示范围-->
+              <!--<i class="el-icon-caret-bottom el-icon&#45;&#45;right"></i>-->
+              <!--</el-button>-->
+              <!--<el-dropdown-menu slot="dropdown">-->
+              <!--<el-dropdown-item v-for="(i,index) in range" :key="index" :command="index+1">{{i}}</el-dropdown-item>-->
+              <!--</el-dropdown-menu>-->
+              <!--</el-dropdown>-->
+              <!--</div>-->
+            </div>
+            <!-- sign：1正常模式、2标记正常项模式、3调整计算项模式 -->
+            <!-- monomers:单体列表 -->
+            <totalIndex ref="1" v-if="lm.dataType==1" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[1]' :monomers='dataSet.monomers' :abnormal='abnormal[lm.dataType]' :sign='sign[lm.dataType]'></totalIndex>
+            <economicIndex ref="2" v-if="lm.dataType==2" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[2]' :monomers='dataSet.monomers' :sign='sign[lm.dataType]' :abnormal='abnormal[lm.dataType]'></economicIndex>
+            <detailedList ref="3" v-if="lm.dataType==3" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[3]' :monomers='dataSet.monomers' :abnormal='abnormal[lm.dataType]' :sign='sign[lm.dataType]'></detailedList>
+            <quantitiesIndex ref="4" v-if="lm.dataType==4" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[4]' :abnormal='abnormal[lm.dataType]' :monomers='dataSet.monomers' :sign='sign[lm.dataType]'></quantitiesIndex>
+            <comprehensive ref="5" v-if="lm.dataType==5" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[5]' :monomers='dataSet.monomers' :sign='sign[lm.dataType]' :abnormal='abnormal[lm.dataType]'></comprehensive>
+            <fees ref="6" v-if="lm.dataType==6" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[6]' :monomers='dataSet.monomers' :sign='sign[lm.dataType]' :abnormal='abnormal[lm.dataType]'></fees>
+            <!-- <resource ref="7" v-if="lm.dataType==7" @childExceptData="getDataFromChild" :maxHeight='maxHeight' :tableDatas='dataSet[7]' :monomers='dataSet.monomers' :sign='sign[lm.dataType]' :abnormal='abnormal[lm.dataType]'></resource> -->
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <el-dialog title="" :visible.sync="adjustmentBox[lm.dataType]" width="400px" center>
+      <div>
+        <span>偏差范围(%)：</span>
+        <el-input v-model="deviationMin" placeholder="请输入偏差范围" style="width:100px"></el-input> ~
+        <el-input v-model="deviationMax" placeholder="请输入偏差范围" style="width:100px"></el-input>
+      </div>
+      <p class="red-tips">{{tips}}</p>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="definiteScope">确 定</el-button>
+        <el-button @click="cancellationScope">取 消</el-button>
+      </span>
+    </el-dialog>
+    <monomerModular :monomerInfo='monomerInfo' :style="{top: renderData.pos.y - posSreen.y + 'px',left: renderData.pos.x +'px'}" v-show="renderData.show"></monomerModular>
+    <el-dialog title="选择库内单项工程" :visible.sync="dialogVisible" :close-on-click-modal='false' class="el-box">
+      <changeDialog @screeningData='screeningData' :proParamsInfo="proParamsInfo" :extract='extract' v-if="Object.keys(proParamsInfo)!=0"></changeDialog>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="definite()">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import api from '@/fetch/api'
+import tool from '@/assets/js/useMoreTool'
+import headerComponent from '@/components/headerComponent'
+import breadcrumb from '@/components/breadcrumb'
+import stepBar from '@/components/stepBar'
+import totalIndex from './contrastTable/totalIndex' //总指标对比
+import economicIndex from './contrastTable/economicIndex' //总指标对比
+import detailedList from './contrastTable/detailedList' //清单漏项
+import quantitiesIndex from './contrastTable/quantitiesIndex' //工程量指标对比
+import comprehensive from './contrastTable/comprehensive'
+import { getPostfix } from '@/assets/js/Utils'
+import { tableFolding } from '@/assets/js/tableFolding'
+import monomerModular from '@/components/monomerInfo'
+import fees from './contrastTable/fees'
+import resource from './contrastTable/resource'
+import changeDialog from '@/components/changeDialog' //选择库内单项工程
+
+export default {
+  components: {
+    resource,
+    fees,
+    headerComponent,
+    breadcrumb,
+    stepBar,
+    totalIndex,
+    economicIndex,
+    detailedList,
+    quantitiesIndex,
+    comprehensive,
+    monomerModular,
+    changeDialog
+  },
+  data() {
+    return {
+      dialogVisible: false,
+      data: [],
+      defaultProps: {
+        children: 'children',
+        label: 'label'
+      },
+      vm: {
+        radio: '1',
+        title: '数据比对',
+        stage: ['选择阶段', '选择数据对比类型', '选择单项工程', '查看对比结果'],
+        breadcrumbs: [{ name: '我的项目', path: '/projectManage' }, { name: '数据比对' }],
+        tableData: [] //综合单价
+      },
+      lm: {
+        i: 0,
+        treeIndex: 1,
+        dataType: '1', //1为综合单价  2为规费税金
+        step: 3,
+        tableData: [], //综合单价
+        respAllData: {},
+        specialMenuIndex: ['1', '2', '4'], //需要 调整计算项
+        loading: true
+      },
+      projectId: this.$route.params.projectId,
+      stageId: this.$route.params.stageId,
+      compareType: this.$route.params.type,
+      maxHeight: window.innerHeight - 276,
+      tabList: [
+        { label: '总指标对比', name: 1 },
+        { label: '经济指标对比', name: 2 },
+        { label: '清单漏项', name: 3 },
+        { label: '工程量指标对比', name: 4 }
+        // { label: '综合单价检查', name: 5 },
+        // { label: '规费税金检查', name: 6 }
+      ],
+      markerItem: {}, // 标记的正常项
+      modiyData: {}, // 调整的项
+      renderData: {
+        show: false,
+        pos: {} // 弹出框位置
+      },
+      posSreen: {
+        x: 245,
+        y: 25
+      },
+      monomerInfo: {},
+      abnormal: [], //是否选择异常项
+      sign: [], //标记调整按钮 2：标记、3：调整
+      deviationRange: {
+        1: { from: 90, to: 110 },
+        2: { from: 90, to: 110 },
+        3: { from: 90, to: 110 },
+        4: { from: 90, to: 110 },
+        5: { from: 90, to: 110 },
+        6: { from: 90, to: 110 }
+      },
+      adjustmentBox: [], //调整范围
+      deviationMin: 90,
+      deviationMax: 110,
+      tips: '', //调整范围的提示
+      dataSet: {
+        //数据集合
+        1: [], //总指标对比
+        2: [], //经济指标对比
+        3: [], //清单漏项
+        4: [], //工程量指标对比
+        5: [], //综合单价检查
+        6: [] //规费税金检查
+      },
+      expertConclusion: {
+        '1': { show: false, tip: '单项工程总指标在指标区间内偏离平均值过大' },
+        '2': { show: false, tip: '经济指标区间偏离平均值过大' },
+        '3': { show: false, tip: '清单存在漏项' },
+        '4': { show: false, tip: '工程量指标区间偏离平均值过大' },
+        '5': { show: false, tip: '清单综合单价不一致' },
+        '6': { show: false, tip: '费率不一致' },
+        '7': { show: false, tip: '材料价格不一致' }
+      }, //鉴定结论
+      range: ['第一级', '第二级', '第三级', '第四级'],
+      command: [],
+      mapper: {
+        '1': { key: '总指标', checkKey: 'costByArea' },
+        '2': { key: '经济指标对比', checkKey: 'costPerSquare' },
+        '3': { key: '清单漏项', checkKey: 'amount' },
+        '4': { key: '工程量', checkKey: 'amountPS' },
+        '5': { key: '综合单价', checkKey: '' },
+        '6': { key: '规费税金', checkKey: '' }
+      },
+      proParamsInfo: {}, //弹框接口请求数据
+      extract: false, //提取数据
+      extractTable: []
+    }
+  },
+  updated() {
+    this.$nextTick(() => {
+      this.tablefold('compare')
+    })
+  },
+  methods: {
+    // 库内侧边栏选择数据之后
+    participatingComparisonLibraryMonomer(val) {
+      api.participatingComparisonLibraryMonomer(val).then(res => {
+        var results = res.data
+        results.map(item => {
+          item.list[0].list = item.list[0].entTypeList
+        })
+        this.addTreeIndex(results)
+        this.extractTable = results
+      })
+    },
+    screeningData(val) {
+      this.participatingComparisonLibraryMonomer(val)
+    },
+    definite() {
+      this.dialogVisible = false
+      this.extract = true
+    },
+    // 重选对比
+    clickReselect() {
+      this.dialogVisible = true
+    },
+    getDataFromChild(payload) {
+      if (payload.type == 'select') {
+        this.markerItem[payload.dataType] = payload
+      } else {
+        this.modiyData[payload.dataType] = payload
+      }
+    },
+    ...tableFolding(['tablefold']),
+    //显示范围
+    handleCommand(command) {
+      this.$set(this.command, this.lm.dataType, command)
+    },
+    // 修改偏差范围
+    modificationBias() {
+      this.tips = ''
+      this.$set(this.adjustmentBox, this.lm.dataType, true)
+      this.deviationMin = this.deviationRange[this.lm.dataType].from
+      this.deviationMax = this.deviationRange[this.lm.dataType].to
+      // api.biasCalcOfIPQuantityIndex(this.lm.).then()
+    },
+    // 确定偏差范围
+    definiteScope() {
+      if (Number(this.deviationMin) < Number(this.deviationMax)) {
+        var keyData = this.mapper[this.lm.dataType].key
+        var reqParam = { from: this.deviationMin, to: this.deviationMax }
+        var reqData = this.lm.respAllData[keyData].data
+        this.lm.loading = true
+        api
+          .reCalc({ data: reqData, param: reqParam }, this.lm.dataType)
+          .then(res => {
+            this.lm.loading = false
+            this.lm.respAllData[keyData].param.from = this.deviationRange[this.lm.dataType].from = this.deviationMin
+            this.lm.respAllData[keyData].param.to = this.deviationRange[this.lm.dataType].to = this.deviationMax
+            console.log(this.lm.dataType, 'type')
+            this.dataSet[this.lm.dataType] = res.data.data
+            if (this.chargeDataExcept(res.data.data)) {
+              this.expertConclusion[this.lm.dataType].show = true
+            } else {
+              this.expertConclusion[this.lm.dataType].show = false
+            }
+          })
+          .catch(err => {
+            this.lm.loading = false
+          })
+
+        this.$set(this.adjustmentBox, this.lm.dataType, false)
+      } else {
+        this.tips = '偏差范围最大值必须大于最小值'
+      }
+    },
+    // 取消偏差范围
+    cancellationScope() {
+      this.$set(this.adjustmentBox, this.lm.dataType, false)
+    },
+    // 获取文件信息
+    monomerGetMonomer(monomerId) {
+      api
+        .getMonomerLeft(monomerId, this.projectId)
+        .then(res => {
+          this.monomerInfo = res.data
+        })
+        .catch(res => {})
+    },
+    load(tree, treeNode, resolve) {
+      var data = this.lm.respAllData.综合单价.items[tree.type]
+      resolve(data)
+    },
+    changeData(value) {
+      value == 1 ? this.$set(this.abnormal, this.lm.dataType, false) : this.$set(this.abnormal, this.lm.dataType, true)
+      if (value == 1) {
+        this.$refs[this.lm.dataType].vm.tableData = this.dataSet[this.lm.dataType]
+      } else {
+        if (!this.expertConclusion[this.lm.dataType].show) {
+          this.$refs[this.lm.dataType].vm.tableData = []
+        }
+      }
+    },
+    goBack() {
+      this.$router.back(-1)
+    },
+    nextstep(current) {
+      this.lm.step = current + 1
+      this.$store.dispatch('nextStepFUN', this.lm.step)
+    },
+    startProCompare() {
+      this.proParamsInfo = {}
+      if (this.$refs.trees.getCheckedNodes().length > 0) {
+        this.dialogVisible = true
+        this.proParamsInfo = Object.assign({}, this.lm.checkedData)
+      } else {
+        this.$message({
+          type: 'info',
+          message: '请选择单项工程'
+        })
+      }
+    },
+    handleClick(data, checked, indeterminate) {
+      if (this.lm.i == 0) {
+        this.lm.checkedData = data
+        this.lm.monomerId = data.basicId
+      }
+      this.lm.i++
+      if (this.lm.i % 2 === 0) {
+        if (checked && this.lm.hasCompared && data.basicId != this.lm.checkedData.basicId) {
+          this.$confirm('您已选择了新的单项工程，是否重新进行比对？', '', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+            .then(() => {
+              this.lm.checkedData = data
+              this.lm.monomerId = data.basicId
+              this.$refs.trees.setCheckedNodes([])
+              this.$refs.trees.setCheckedNodes([data])
+              this.lm.respAllData = {}
+              this.lm.tableData['type1'] = []
+              this.lm.tableData['type2'] = []
+              this.vm.tableData1 = []
+              this.vm.tableData2 = []
+              this.startCompare()
+              this.resetRadioAndTab()
+            })
+            .catch(() => {
+              this.$refs.trees.setCheckedNodes([])
+              this.$refs.trees.setCheckedNodes([this.lm.checkedData])
+            })
+        } else {
+          if (checked) {
+            this.$refs.trees.setCheckedNodes([])
+            this.$refs.trees.setCheckedNodes([data])
+            this.lm.checkedData = data
+            this.lm.monomerId = data.basicId
+          } else {
+            this.$refs.trees.setCheckedNodes([])
+          }
+        }
+      }
+    },
+    renderContent(h, { node, data, store }) {
+      if (node.level == 3) {
+        return (
+          <span class="custom-tree-node three-level">
+            <span stype="">{node.label}</span>
+            <i class="icon-info" onMouseover={e => this.maskNameEnter(e, data)} onMouseleave={e => this.maskNameLeave()} />
+          </span>
+        )
+      } else {
+        return (
+          <span class="custom-tree-node four-level">
+            <span>{node.label}</span>
+          </span>
+        )
+      }
+    },
+    // 鼠标放上
+    maskNameEnter($event, data) {
+      let _this = this
+      _this.renderData.show = true
+      _this.renderData.pos = tool.getMousePos($event) // 弹出框位置
+      _this.renderData.pos.x = tool.getMousePos($event).x + 20
+      _this.renderData.pos.y = tool.getMousePos($event).y + 50
+      if (_this.renderData.pos.y - this.posSreen.y + 300 > document.body.offsetHeight) {
+        _this.renderData.pos.y = document.body.offsetHeight - 300
+      }
+      this.monomerGetMonomer(data.basicId)
+    },
+    // 鼠标离开
+    maskNameLeave() {
+      let _this = this
+      _this.renderData.show = false
+    },
+    changeTab(type) {
+      this.lm.dataType = type.name
+      this.vm.radio = '1'
+    },
+    tagChange(val) {
+      this.$set(this.sign, this.lm.dataType, val)
+    },
+    tagFinish(type) {
+      // type:signs 标记 type:adjustment 调整
+      var tagAllData = type == 'signs' ? this.markerItem[this.lm.dataType] : this.modiyData[this.lm.dataType]
+      var data
+      var keyData = this.mapper[this.lm.dataType].key
+      if (this.lm.specialMenuIndex.indexOf(this.lm.dataType) == -1) {
+        data = this.lm.respAllData[keyData]
+      } else {
+        data = this.lm.respAllData[keyData].data
+      }
+      var dataLength = 0
+      if (tagAllData && tagAllData.data) {
+        dataLength = tagAllData.data.length
+      }
+      if (dataLength <= 0) {
+        this.$message({
+          type: 'info',
+          message: type == 'signs' ? '未选择异常项' : '未选择计算项'
+        })
+      } else {
+        let tips = ''
+        type == 'signs' ? (tips = '您已勾选' + dataLength + '个异常项，是否确认将勾选的异常项标记为正常项?') : (tips = '您已勾选' + dataLength + '个计算项，是否确认取消勾选的数值不再参与平均值计算？?')
+        this.$confirm(tips, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        })
+          .then(() => {
+            this.$set(this.sign, this.lm.dataType, 1)
+            if (this.lm.dataType == 5 || this.lm.dataType == 7) {
+              this.tagFinishChangeData(this.lm.respAllData[keyData].groups, tagAllData)
+              var items = []
+              let that = this
+              Object.keys(this.lm.respAllData[keyData].items).forEach(function(key) {
+                items = items.concat(that.lm.respAllData[keyData].items[key])
+              })
+              this.tagFinishChangeData(items, tagAllData)
+              if (this.chargeDataExcept(this.dataSet[this.lm.dataType].groups) || this.chargeDataExcept(this.dataSet[this.lm.dataType].items)) {
+                this.expertConclusion[this.lm.dataType].show = true
+              } else {
+                this.expertConclusion[this.lm.dataType].show = false
+                if (this.abnormal[this.lm.dataType]) {
+                  this.$refs[this.lm.dataType].vm.tableData = []
+                }
+              }
+            } else {
+              this.tagFinishChangeData(data, tagAllData)
+              if (this.chargeDataExcept(this.dataSet[this.lm.dataType])) {
+                this.expertConclusion[this.lm.dataType].show = true
+              } else {
+                this.expertConclusion[this.lm.dataType].show = false
+                if (this.abnormal[this.lm.dataType]) {
+                  this.$refs[this.lm.dataType].vm.tableData = []
+                }
+              }
+            }
+
+            if (type == 'signs') {
+              this.markerItem[this.lm.dataType].data = []
+              this.$refs[this.lm.dataType].lm.exceptData = []
+            } else {
+              this.modiyData[this.lm.dataType].data = []
+              this.$refs[this.lm.dataType].lm.calData = []
+            }
+
+            this.$message({
+              type: 'success',
+              message: type == 'signs' ? '标记完成' : '调整完成'
+            })
+          })
+          .catch(err => {
+            if (tagAllData.type == 'calc') {
+              this.cancelChangeData(data, tagAllData)
+              this.modiyData[this.lm.dataType].data = []
+            }
+            this.$message({
+              type: 'info',
+              message: '已取消'
+            })
+          })
+      }
+    },
+    cancelChangeData(dataY, subData) {
+      let that = this
+      dataY.forEach(function(data) {
+        var type = subData.type
+        subData.data.find((value, index, arr) => {
+          if (value && data.id == value.id) {
+            if (type == 'select') {
+              data['result-' + value.columnId] = 0
+            } else if (type == 'calc') {
+              data['calc-' + value.columnId] = !data['calc-' + value.columnId]
+            }
+          }
+        })
+        if (data.items) {
+          that.cancelChangeData(data.items, subData)
+        }
+      })
+    },
+    tagFinishChangeData(dataY, subData) {
+      let that = this
+      dataY.forEach(function(data) {
+        var type = subData.type
+        subData.data.find((value, index, arr) => {
+          if (value && data.id == value.id) {
+            if (type == 'select') {
+              if (value.columnId) {
+                data['result-' + value.columnId] = 0
+              } else {
+                data['result'] = 0
+              }
+            } else if (type == 'calc') {
+              that.calculate(data)
+            }
+          }
+        })
+        Object.keys(data).forEach(function(key) {
+          if (key.startsWith('result') && key != 'result') {
+            if (data[key] == 1) {
+              data.result = 1
+            }
+          }
+        })
+        if (data.items) {
+          that.tagFinishChangeData(data.items, subData)
+          var result = 0
+          data.items.forEach(function(data) {
+            if (data.result == 1) {
+              result = 1
+            }
+          })
+          data.result = result
+        }
+      })
+    },
+    //根据偏差范围修改，计算一行是为否异常项
+    calculate(data) {
+      var average = 0
+      var index = 0
+      var checkKey = this.mapper[this.lm.dataType].checkKey
+      Object.keys(data).forEach(function(key) {
+        var id = key.slice(5)
+        if (key.startsWith('calc') && data[key]) {
+          index++
+          average += data[checkKey + '-' + id]
+        } else {
+          data['result-' + id] = 0
+        }
+      })
+      average = average / index
+      let that = this
+      Object.keys(data).forEach(function(key) {
+        if (key.startsWith('calc') && data[key]) {
+          var id = key.slice(5)
+          var min
+          var max
+          if (average > 0) {
+            min = (that.deviationRange[that.lm.dataType].from * average) / 100
+            max = (that.deviationRange[that.lm.dataType].to * average) / 100
+          } else {
+            max = (that.deviationRange[that.lm.dataType].from * average) / 100
+            min = (that.deviationRange[that.lm.dataType].to * average) / 100
+          }
+
+          if (data[checkKey + '-' + id] > max || data[checkKey + '-' + id] < min) {
+            data['result-' + id] = 1
+          } else {
+            data['result-' + id] = 0
+          }
+        }
+      })
+    },
+    addTreeIndex(data) {
+      console.log(data)
+      for (var a = 0; a < data.length; a++) {
+        data[a].index = this.lm.treeIndex
+        if (data[a].projectName) {
+          data[a].label = data[a].projectName
+        }
+        if (data[a].name) {
+          data[a].label = data[a].name
+        }
+        if (data[a].stageName) {
+          data[a].label = data[a].stageName
+        }
+        this.lm.treeIndex++
+        if (data[a].list && data[a].list.length > 0) {
+          data[a].children = data[a].list
+          data[a].disabled = true
+          this.addTreeIndex(data[a].children)
+        }
+      }
+    },
+    saveCompareReulst() {
+      this.$confirm('保存后，若退出数据比对页面，则不可再调整已保存的经济技术指标（不含人材机）比对结果，如需调整，请重新比对。是否确定保存？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          var info = this.lm.respAllData.params
+          this.lm.respAllData.treeData = this.data
+          var content = JSON.stringify(this.lm.respAllData)
+          api
+            .saveInnerProjectCompare({ params: info, content: content, code: 0 })
+            .then(res => {
+              this.$alert('当前比对结果已保存，您可在“我的项目”-“数据比对”点击“查看记录”查看。', '', {
+                confirmButtonText: '确定',
+                callback: action => {}
+              })
+            })
+            .catch(err => {
+              this.waitTime = false
+            })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+    },
+    chargeDataExcept(data) {
+      //判断数据中是否存在异常项
+      for (var a = 0; a < data.length; a++) {
+        var v = data[a]
+        var result
+        Object.keys(v).forEach(function(key) {
+          if (key.startsWith('result')) {
+            if (v[key] == 1) {
+              result = true
+            }
+          }
+        })
+        if (result) {
+          return true
+        }
+        if (v.items && v.items.length > 0) {
+          if (this.chargeDataExcept(v.items)) {
+            return true
+          }
+        }
+      }
+    }
+  },
+  created() {
+    var from = this.$route.query.from
+    if (from && from == 'yg') {
+      this.vm.stage = ['选择质监类型', '选择单项工程', '查看质监结果']
+      this.vm.title = '数据质监'
+      this.lm.step = 2
+    }
+    if (this.compareType == 3) {
+      this.tabList = []
+      this.tabList.push({ label: '人材机价格比对', name: '7' })
+      this.lm.dataType = '7'
+    }
+    this.$store.dispatch('nextStepFUN', this.lm.step)
+  },
+  mounted() {
+    api
+      // .getCompareMonomers({ commonId: this.projectId, stageId: this.stageId, dataMatchType: this.compareType })
+      .getCompareMonomers({ commonId: 33, stageId: this.stageId, dataMatchType: this.compareType })
+      .then(res => {
+        var results = [res.data]
+        results[0].list[0].list = results[0].list[0].entTypeList
+        this.addTreeIndex(results)
+        this.data = results
+      })
+      .catch(err => (this.waitTime = false))
+  }
+}
+</script>
+<style lang="less" scoped>
+.analysis-page {
+  .analysis-content {
+    height: calc(100vh - 151px);
+    background-color: #fff;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    .content {
+      box-sizing: border-box;
+      height: 100%;
+      background-color: #e7eaee;
+      padding: 11px 11px 20px 19px;
+      .left {
+        float: left;
+        width: 240px;
+        height: 100%;
+        position: relative;
+        .top {
+          height: 100%;
+          background-color: #fff;
+          .prompt {
+            border-bottom: 1px solid rgba(224, 227, 235, 1);
+            padding-left: 12px;
+            padding-top: 9px;
+            padding-bottom: 8px;
+            font-size: 12px;
+            font-weight: 400;
+            background-color: #fafafb;
+          }
+          .tree-box {
+            height: calc(50% - 35px);
+            // overflow: auto;
+          }
+          .box-length {
+            overflow: auto;
+          }
+          .trees-box {
+            border-top: 1px solid #e0e3eb;
+            .reselect {
+              margin-top: 10px;
+              margin-left: 6px;
+              span {
+                height: 13px;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(68, 68, 68, 1);
+                line-height: 13px;
+              }
+              button {
+                width: 50px;
+                height: 26px;
+                background: #4474cf;
+                border-radius: 13px;
+                color: #ffffff;
+                font-size: 12px;
+                cursor: pointer;
+              }
+            }
+            .trees {
+              height: calc(100% - 36px);
+              overflow: auto;
+            }
+          }
+          /deep/.el-tree {
+            .custom-tree-node {
+              height: 13px;
+              line-height: 13px;
+              > span {
+                display: inline-block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                height: 13px;
+                line-height: 13px;
+              }
+            }
+            .two-level {
+              > span {
+                width: 182px;
+              }
+            }
+            .three-level {
+              > span {
+                width: 120px;
+              }
+            }
+            .four-level {
+              > span {
+                width: 156px;
+              }
+            }
+            .icon-info {
+              margin-left: 5px;
+              width: 10px;
+              height: 10px;
+              background: url(~@/assets/img/infos.png);
+              cursor: pointer;
+              display: inline-block;
+            }
+            .icon-info:hover {
+              margin-left: 5px;
+              display: inline-block;
+              width: 10px;
+              height: 10px;
+              background: url(~@/assets/img/hoverInfos.png);
+              cursor: pointer;
+            }
+            .el-checkbox__inner {
+              border-radius: 50%;
+            }
+          }
+          /*修改滚动条样式*/
+          .tree-box::-webkit-scrollbar,
+          .trees::-webkit-scrollbar {
+            width: 5px;
+            height: 10px;
+            /**/
+          }
+          // 滚动条的轨道
+          .tree-box::-webkit-scrollbar-track,
+          .trees::-webkit-scrollbar-track {
+            background: rgb(239, 239, 239);
+            border-radius: 2px;
+          }
+          // 滚动条里面的小方块
+          .tree-box::-webkit-scrollbar-thumb,
+          .trees::-webkit-scrollbar-thumb {
+            background: #bfbfbf;
+            border-radius: 10px;
+          }
+          .trees {
+            /deep/.three-level {
+              padding-left: 22px !important;
+            }
+          }
+        }
+        .bottom {
+          cursor: pointer;
+          width: 100%;
+          height: 36px;
+          text-align: center;
+          position: absolute;
+          bottom: 0px;
+          font-size: 14px;
+          font-weight: 400;
+          color: rgba(255, 255, 255, 1);
+          .l-left {
+            text-align: center;
+            display: inline-block;
+            width: 120px;
+            height: 36px;
+            line-height: 36px;
+            background-color: #4574d0;
+          }
+          .l-right {
+            text-align: center;
+            display: inline-block;
+            width: 120px;
+            height: 36px;
+            line-height: 36px;
+            background-color: #13ce66;
+          }
+          .initial {
+            width: 120px;
+            height: 36px;
+            background: #dddddd;
+            color: #b8b8b8;
+          }
+        }
+      }
+      .right {
+        margin-left: 260px;
+        height: 100%;
+        position: relative;
+        /deep/.el-tabs {
+          .el-tabs__item {
+            color: #b8b8b8;
+          }
+          .el-tabs__item.is-active {
+            color: #4474cf;
+          }
+          .el-tabs__active-bar {
+            background-color: #4474cf;
+          }
+        }
+        .mid {
+          margin-bottom: 20px;
+          height: 30px;
+          line-height: 30px;
+          .btn-group {
+            float: left;
+            .row {
+              padding: 6px 12px;
+              height: 18px;
+              line-height: 18px;
+              margin-right: 14px;
+              cursor: pointer;
+              color: rgba(255, 255, 255, 1);
+              font-size: 14px;
+              font-weight: 400;
+            }
+            .btn1 {
+              background: #44cf96;
+            }
+            .btn2 {
+              background: #4474cf;
+            }
+            .btn3 {
+              background: #44cf96;
+            }
+          }
+          .division {
+            float: left;
+            width: 1px;
+            height: 16px;
+            background: #ced2dc;
+            margin: 7px 11px 0 8px;
+          }
+          .division:nth-of-type(2) {
+            margin: 7px 11px 0 11px;
+          }
+          .word-group {
+            float: left;
+            .result {
+              display: inline-block;
+              height: 30px;
+              font-size: 12px;
+              font-weight: 400;
+              color: #666666;
+            }
+            span:nth-child(2) {
+              margin-right: 17px;
+            }
+            .prohibit-point {
+              color: #b8b8b8;
+              background: #dddddd;
+              padding: 0 10px;
+              cursor: not-allowed;
+            }
+            .may-point {
+              background: #4474cf;
+              color: rgba(255, 255, 255, 1);
+              padding: 0 10px;
+              cursor: pointer;
+            }
+          }
+          .choice-group {
+            float: left;
+            /deep/.el-radio {
+              margin-right: 21px;
+              .el-radio__input.is-checked .el-radio__inner {
+                border-color: #4474cf;
+                background: #4474cf;
+              }
+              .el-radio__input.is-checked + .el-radio__label {
+                color: #4474cf;
+              }
+            }
+            /deep/.el-radio:nth-children(2) {
+              margin-right: 0 !important;
+            }
+          }
+          .appraisal {
+            color: #cf4242;
+          }
+          .drop-down {
+            display: inline-block;
+            margin-left: 10px;
+            /deep/.el-dropdown {
+              /deep/.el-button {
+                width: 94px;
+                height: 30px;
+                padding: 0 !important;
+                border-radius: 0 !important;
+                background-color: #44cf96;
+                border-color: #44cf96;
+              }
+            }
+          }
+        }
+        .bottom {
+          position: absolute;
+          top: 84px;
+          bottom: 0;
+          right: 0;
+          left: 0;
+        }
+        .blank {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: #f5f6f8;
+          flex-direction: column;
+          .prompt {
+            color: #bcbbcd;
+            font-size: 18px;
+            font-weight: 400;
+            margin-top: 49px;
+          }
+        }
+        .click-icon {
+          display: inline-block;
+          width: 12px;
+          height: 14px;
+          background: url(../../assets/img/list-n.png);
+          margin: -2px 0 0 8px;
+          vertical-align: middle;
+          cursor: pointer;
+          border: none;
+        }
+        .click-iconVisited {
+          background: url(../../assets/img/listvisited.png);
+          display: inline-block;
+          width: 12px;
+          height: 14px;
+          margin: -2px 0 0 8px;
+          vertical-align: middle;
+        }
+        /deep/.el-table {
+          .el-table__expand-icon--expanded {
+            transform: rotate(00deg);
+          }
+          .el-table__expand-icon {
+            font-size: 12px !important;
+            i {
+              height: 12px;
+              line-height: 12px;
+              text-align: center;
+              width: 12px;
+              font-size: 12px !important;
+              border: 1px solid rgba(216, 224, 245, 1) !important;
+              background: rgba(255, 255, 255, 1) !important;
+              color: #4474cf;
+            }
+          }
+        }
+      }
+    }
+  }
+  .red-tips {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    height: 13px;
+    line-height: 13px;
+  }
+  .el-box {
+    /deep/.el-dialog {
+      max-height: 80%;
+      margin: 0 auto !important;
+      position: relative;
+      top: 50%; /*偏移*/
+      transform: translateY(-50%);
+      .el-dialog__header {
+        padding: 17px 20px;
+        .el-dialog__title {
+          font-size: 18px;
+          line-height: 18px;
+          font-weight: 400;
+          color: rgba(51, 51, 51, 1);
+        }
+      }
+      .el-dialog__body {
+        padding: 0;
+      }
+      .el-dialog__footer {
+        padding: 0;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.15);
+        .el-button {
+          padding: 0;
+          width: 60px;
+          height: 32px;
+          line-height: 32px;
+          font-size: 14px;
+          font-weight: 400;
+        }
+        .el-button--primary {
+          background-color: #4474cf;
+          border-color: #4474cf;
+        }
+      }
+    }
+  }
+}
+@media screen and (min-width: 1768px) {
+  .el-box {
+    /deep/.el-dialog {
+      width: 1700px;
+    }
+  }
+}
+@media screen and (max-width: 1680px) and (min-width: 1600px) {
+  .el-box {
+    /deep/.el-dialog {
+      width: 1500px;
+    }
+  }
+}
+@media screen and (max-width: 1599px) and (min-width: 1360px) {
+  .el-box {
+    /deep/.el-dialog {
+      width: 1250px;
+    }
+  }
+}
+@media screen and (max-width: 1359px) and (min-width: 1281px) {
+  .el-box {
+    /deep/.el-dialog {
+      width: 1180px;
+    }
+  }
+}
+@media screen and (max-width: 1280px) {
+  .el-box {
+    /deep/.el-dialog {
+      width: 1100px;
+    }
+  }
+}
+</style>
